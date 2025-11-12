@@ -5,6 +5,8 @@ VisualStudioVersion = 17.14.36414.22 d17.14
 MinimumVisualStudioVersion = 10.0.40219.1
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "TATA.GestiondeTalentoMoviles.API", "TATA.GestiondeTalentoMoviles.API\TATA.GestiondeTalentoMoviles.API.csproj", "{379BFEC3-65D1-4082-A1DC-2FCE2C43BC7F}"
 EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "TATA.GestiondeTalentoMoviles.CORE", "TATA.GestiondeTalentoMoviles.CORE\TATA.GestiondeTalentoMoviles.CORE.csproj", "{2B06DC33-EB28-4AB8-B965-DE759E20880F}"
+EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
 		Debug|Any CPU = Debug|Any CPU
@@ -15,6 +17,10 @@ Global
 		{379BFEC3-65D1-4082-A1DC-2FCE2C43BC7F}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{379BFEC3-65D1-4082-A1DC-2FCE2C43BC7F}.Release|Any CPU.ActiveCfg = Release|Any CPU
 		{379BFEC3-65D1-4082-A1DC-2FCE2C43BC7F}.Release|Any CPU.Build.0 = Release|Any CPU
+		{2B06DC33-EB28-4AB8-B965-DE759E20880F}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{2B06DC33-EB28-4AB8-B965-DE759E20880F}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{2B06DC33-EB28-4AB8-B965-DE759E20880F}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{2B06DC33-EB28-4AB8-B965-DE759E20880F}.Release|Any CPU.Build.0 = Release|Any CPU
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE
