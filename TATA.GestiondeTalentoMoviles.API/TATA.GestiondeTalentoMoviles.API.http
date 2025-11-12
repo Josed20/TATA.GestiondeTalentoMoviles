@@ -1,0 +1,6 @@
+@TATA.GestiondeTalentoMoviles.API_HostAddress = http://localhost:5260
+
+GET {{TATA.GestiondeTalentoMoviles.API_HostAddress}}/weatherforecast/
+Accept: application/json
+
+###
