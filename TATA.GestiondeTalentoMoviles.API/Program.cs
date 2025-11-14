@@ -1,9 +1,11 @@
 using Microsoft.Extensions.Options;
 using MongoDB.Driver;
-using TATA.GestiondeTalentoMoviles.CORE.Interfaces; // usar el namespace correcto de Interfaces
-using TATA.GestiondeTalentoMoviles.CORE.Services;   // usar el namespace correcto de Services
-using TATA.GestiondeTalentoMoviles.CORE.Core.Settings; // Este ya estaba bien
-using TATA.GestiondeTalentoMoviles.CORE.Infrastructure.Repositories; // Este ya estaba bien
+using TATA.GestiondeTalentoMoviles.CORE.Interfaces;
+using TATA.GestiondeTalentoMoviles.CORE.Services;
+using TATA.GestiondeTalentoMoviles.CORE.Core.Settings;
+using TATA.GestiondeTalentoMoviles.CORE.Infrastructure.Repositories;
+using TATA.GestiondeTalentoMoviles.CORE.Entities;
+using System.Reflection;
 
 var builder = WebApplication.CreateBuilder(args);
 
@@ -14,13 +16,14 @@ builder.Services.Configure<MongoDbSettings>(
     builder.Configuration.GetSection("MongoDbSettings")
 );
 
-// 2. Registrar el cliente de MongoDB como Singleton
+// 2. Registrar el cliente de MongoDB como Singleton (¡Esto es correcto!)
 builder.Services.AddSingleton<IMongoClient>(s =>
     new MongoClient(builder.Configuration.GetValue<string>("MongoDbSettings:ConnectionString"))
 );
 
 // 3. Registrar la base de datos (IMongoDatabase)
-builder.Services.AddScoped<IMongoDatabase>(s =>
+// CAMBIADO A AddTransient como solicitaste
+builder.Services.AddTransient<IMongoDatabase>(s =>
 {
     var settings = s.GetRequiredService<IOptions<MongoDbSettings>>().Value;
     var client = s.GetRequiredService<IMongoClient>();
@@ -30,16 +33,21 @@ builder.Services.AddScoped<IMongoDatabase>(s =>
 // --- FIN DE CONFIGURACIÓN DE MONGODB ---
 
 // 4. Registrar tus servicios y repositorios
-builder.Services.AddScoped<IColaboradorService, ColaboradorService>();
-builder.Services.AddScoped<IColaboradorRepository, ColaboradorRepository>();
-
+// CAMBIADO A AddTransient como solicitaste
+builder.Services.AddTransient<IColaboradorService, ColaboradorService>();
+builder.Services.AddTransient<IColaboradorRepository, ColaboradorRepository>();
 
 // Servicios existentes de la plantilla
 builder.Services.AddControllers();
 builder.Services.AddEndpointsApiExplorer();
 builder.Services.AddSwaggerGen();
 
-var app = builder.Build(); // El error debería desaparecer de aquí
+// --- CORRECCIÓN DEL TRY-CATCH ---
+// Declaramos 'app' aquí para que sea accesible en todo el archivo
+WebApplication app;
+
+// 'builder.Build()' rara vez falla.
+app = builder.Build();
 
 // Configure the HTTP request pipeline.
 if (app.Environment.IsDevelopment())
@@ -52,6 +60,28 @@ app.UseHttpsRedirection();
 
 app.UseAuthorization();
 
-app.MapControllers();
+// --- INICIO DEL BLOQUE DE DEBUG ---
+// El error ReflectionTypeLoadException sucede aquí, cuando .NET
+// intenta escanear todos tus 'Controllers'.
+try
+{
+    app.MapControllers();
+}
+catch (ReflectionTypeLoadException ex)
+{
+    // Esto AHORA SÍ debería imprimir el error real
+    Console.WriteLine("!!! ERROR DE CARGA DE REFLEXIÓN !!!");
+    foreach (var loaderEx in ex.LoaderExceptions)
+    {
+        // Esto te dirá qué DLL o paquete NuGet está causando el conflicto
+        if (loaderEx != null)
+        {
+            Console.WriteLine(loaderEx.Message);
+        }
+    }
+    // Lanza la excepción principal para detener la app
+    throw;
+}
+// --- FIN DEL BLOQUE DE DEBUG ---
 
 app.Run();

@@ -15,7 +15,7 @@ namespace TATA.GestiondeTalentoMoviles.CORE.Infrastructure.Repositories
 
         public ColaboradorRepository(IMongoDatabase database)
         {
-            _colaboradores = database.GetCollection<Colaborador>("Colaboradores");
+            _colaboradores = database.GetCollection<Colaborador>("colaboradores");
         }
 
         public async Task<Colaborador> CreateAsync(Colaborador colaborador)
