@@ -13,5 +13,7 @@ namespace TATA.GestiondeTalentoMoviles.CORE.Interfaces // corregido namespace de
         Task<IEnumerable<Colaborador>> GetAllAsync();
         Task<Colaborador?> GetByIdAsync(string id);
         Task<Colaborador> CreateAsync(Colaborador colaborador);
+        Task<bool> UpdateAsync(string id, Colaborador colaborador);
+        Task<bool> DeleteAsync(string id);
     }
 }

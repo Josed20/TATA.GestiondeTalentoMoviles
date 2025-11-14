@@ -1,11 +1,8 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text;
+﻿using System.Collections.Generic;
 using System.Threading.Tasks;
 using MongoDB.Driver;
-using TATA.GestiondeTalentoMoviles.CORE.Entities; // corregido namespace de Entities
-using TATA.GestiondeTalentoMoviles.CORE.Interfaces; // corregido namespace de Interfaces
+using TATA.GestiondeTalentoMoviles.CORE.Entities;
+using TATA.GestiondeTalentoMoviles.CORE.Interfaces;
 
 namespace TATA.GestiondeTalentoMoviles.CORE.Infrastructure.Repositories
 {
@@ -15,7 +12,8 @@ namespace TATA.GestiondeTalentoMoviles.CORE.Infrastructure.Repositories
 
         public ColaboradorRepository(IMongoDatabase database)
         {
-            _colaboradores = database.GetCollection<Colaborador>("Colaboradores");
+            // 👇 nombre EXACTO de la colección en MongoDB
+            _colaboradores = database.GetCollection<Colaborador>("colaborador");
         }
 
         public async Task<Colaborador> CreateAsync(Colaborador colaborador)
@@ -31,7 +29,38 @@ namespace TATA.GestiondeTalentoMoviles.CORE.Infrastructure.Repositories
 
         public async Task<Colaborador?> GetByIdAsync(string id)
         {
-            return await _colaboradores.Find(c => c.Id == id).FirstOrDefaultAsync();
+            return await _colaboradores
+                .Find(c => c.Id == id)
+                .FirstOrDefaultAsync();
         }
+
+        public async Task<bool> UpdateAsync(string id, Colaborador colaborador)
+        {
+            // nos aseguramos de que el Id del documento coincida con el que se está actualizando
+            colaborador.Id = id;
+
+            var result = await _colaboradores.ReplaceOneAsync(
+                c => c.Id == id,
+                colaborador,
+                new ReplaceOptions { IsUpsert = false }
+            );
+
+            return result.ModifiedCount > 0;
+        }
+
+        public async Task<bool> DeleteAsync(string id)
+        {
+            // Borrado lógico: solo marcamos la disponibilidad como "Inactivo"
+            var update = Builders<Colaborador>.Update
+                .Set(c => c.Disponibilidad.Estado, "Inactivo");
+
+            var result = await _colaboradores.UpdateOneAsync(
+                c => c.Id == id,
+                update
+            );
+
+            return result.ModifiedCount > 0;
+        }
+
     }
 }

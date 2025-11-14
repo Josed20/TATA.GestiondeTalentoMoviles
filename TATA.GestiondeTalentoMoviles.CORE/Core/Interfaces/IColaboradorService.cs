@@ -13,5 +13,7 @@ namespace TATA.GestiondeTalentoMoviles.CORE.Interfaces
         Task<IEnumerable<ColaboradorReadDto>> GetAllAsync();
         Task<ColaboradorReadDto?> GetByIdAsync(string id);
         Task<ColaboradorReadDto> CreateAsync(ColaboradorCreateDto createDto);
+        Task<ColaboradorReadDto?> UpdateAsync(string id, ColaboradorUpdateDto updateDto);
+        Task<bool> DeleteAsync(string id);
     }
 }

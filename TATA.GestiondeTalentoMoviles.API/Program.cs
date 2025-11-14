@@ -3,7 +3,8 @@ using MongoDB.Driver;
 using TATA.GestiondeTalentoMoviles.CORE.Interfaces; // usar el namespace correcto de Interfaces
 using TATA.GestiondeTalentoMoviles.CORE.Services;   // usar el namespace correcto de Services
 using TATA.GestiondeTalentoMoviles.CORE.Core.Settings; // Este ya estaba bien
-using TATA.GestiondeTalentoMoviles.CORE.Infrastructure.Repositories; // Este ya estaba bien
+using TATA.GestiondeTalentoMoviles.CORE.Infrastructure.Repositories;
+using TATA.GestiondeTalentoMoviles.CORE.Core.Interfaces; // Este ya estaba bien
 
 var builder = WebApplication.CreateBuilder(args);
 
@@ -30,9 +31,15 @@ builder.Services.AddScoped<IMongoDatabase>(s =>
 // --- FIN DE CONFIGURACIÓN DE MONGODB ---
 
 // 4. Registrar tus servicios y repositorios
+//Colaborador
 builder.Services.AddScoped<IColaboradorService, ColaboradorService>();
 builder.Services.AddScoped<IColaboradorRepository, ColaboradorRepository>();
-
+//Skill
+builder.Services.AddScoped<ISkillService, SkillService>();
+builder.Services.AddScoped<ISkillRepository, SkillRepository>();
+//NivelSkill
+builder.Services.AddScoped<INivelSkillService, NivelSkillService>();
+builder.Services.AddScoped<INivelSkillRepository, NivelSkillRepository>();
 
 // Servicios existentes de la plantilla
 builder.Services.AddControllers();

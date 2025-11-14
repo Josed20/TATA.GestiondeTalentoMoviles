@@ -7,12 +7,16 @@
   </PropertyGroup>
 
   <ItemGroup>
-    <Folder Include="Infrastructure\Data\" />
-    <Folder Include="Infrastructure\Shared\" />
+    <Compile Remove="Infrastructure\Data\**" />
+    <Compile Remove="Infrastructure\Shared\**" />
+    <EmbeddedResource Remove="Infrastructure\Data\**" />
+    <EmbeddedResource Remove="Infrastructure\Shared\**" />
+    <None Remove="Infrastructure\Data\**" />
+    <None Remove="Infrastructure\Shared\**" />
   </ItemGroup>
 
   <ItemGroup>
-    <PackageReference Include="MongoDB.Driver" Version="2.25.0" />
+    <PackageReference Include="MongoDB.Driver" Version="3.0.0" />
   </ItemGroup>
 
 </Project>
