@@ -6,8 +6,13 @@ using TATA.GestiondeTalentoMoviles.CORE.Core.Settings;
 using TATA.GestiondeTalentoMoviles.CORE.Infrastructure.Repositories;
 using TATA.GestiondeTalentoMoviles.CORE.Entities;
 using System.Reflection;
+using MongoDB.Bson.Serialization.Conventions;
 
 var builder = WebApplication.CreateBuilder(args);
+
+// Register camelCase convention so BSON keys like 'nombre' map to C# properties 'Nombre'
+var conventionPack = new ConventionPack { new CamelCaseElementNameConvention() };
+ConventionRegistry.Register("camelCase", conventionPack, t => true);
 
 // --- INICIO DE CONFIGURACIÓN DE MONGODB ---
 
@@ -36,6 +41,16 @@ builder.Services.AddTransient<IMongoDatabase>(s =>
 // CAMBIADO A AddTransient como solicitaste
 builder.Services.AddTransient<IColaboradorService, ColaboradorService>();
 builder.Services.AddTransient<IColaboradorRepository, ColaboradorRepository>();
+
+// Registrar nuevos servicios/repositorios
+builder.Services.AddTransient<IUserService, UserService>();
+builder.Services.AddTransient<IUserRepository, UserRepository>();
+
+builder.Services.AddTransient<IRolService, RolService>();
+builder.Services.AddTransient<IRolRepository, RolRepository>();
+
+builder.Services.AddTransient<IAreaService, AreaService>();
+builder.Services.AddTransient<IAreaRepository, AreaRepository>();
 
 // Servicios existentes de la plantilla
 builder.Services.AddControllers();
