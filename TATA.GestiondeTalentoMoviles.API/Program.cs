@@ -3,7 +3,8 @@ using MongoDB.Driver;
 using TATA.GestiondeTalentoMoviles.CORE.Interfaces; // usar el namespace correcto de Interfaces
 using TATA.GestiondeTalentoMoviles.CORE.Services;   // usar el namespace correcto de Services
 using TATA.GestiondeTalentoMoviles.CORE.Core.Settings; // Este ya estaba bien
-using TATA.GestiondeTalentoMoviles.CORE.Infrastructure.Repositories; // Este ya estaba bien
+using TATA.GestiondeTalentoMoviles.CORE.Infrastructure.Repositories;
+using System.Reflection; // Este ya estaba bien
 
 var builder = WebApplication.CreateBuilder(args);
 
@@ -48,10 +49,18 @@ if (app.Environment.IsDevelopment())
     app.UseSwaggerUI();
 }
 
-app.UseHttpsRedirection();
+//app.UseHttpsRedirection();
 
 app.UseAuthorization();
 
-app.MapControllers();
+try
+{
+    app.MapControllers();
+}
+catch (ReflectionTypeLoadException ex)
+{
+    foreach (var le in ex.LoaderExceptions) Console.WriteLine(le);
+    throw;
+}
 
 app.Run();
