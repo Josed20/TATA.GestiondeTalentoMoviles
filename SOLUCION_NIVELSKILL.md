@@ -1,428 +1,190 @@
-# Implementación Completa de NivelSkill con ObjectId
+# Solución a los Problemas de NivelSkill
 
-## ?? Cambios Implementados
+## ?? Problemas Identificados y Solucionados
 
-### **Esquema de MongoDB Actualizado**
+### 1. **Error POST con ID Duplicado (Error 11000)**
 
-La colección `nivelskills` ahora usa el siguiente esquema:
-
-```javascript
-{
-  $jsonSchema: {
-    bsonType: 'object',
-    required: ['codigo', 'nombre'],
-    properties: {
-      _id: {
-        bsonType: 'objectId',
-        description: 'ID autogenerado por MongoDB'
-      },
-      codigo: {
-        bsonType: 'int',
-        description: 'Código del nivel (0=no iniciado, 1=básico, 2=intermedio, 3=avanzado)'
-      },
-      nombre: {
-        bsonType: 'string',
-        description: 'Nombre del nivel'
-      }
-    }
-  }
-}
+**Problema Original:**
+```
+MongoWriteException: E11000 duplicate key error collection: talento_db.nivelskills index: _id_ dup key: { _id: 0 }
 ```
 
----
+**Causa:**
+- No había manejo de excepciones para claves duplicadas
+- MongoDB lanzaba una excepción no controlada
 
-## ?? Archivos Modificados
+**Solución Implementada:**
 
-### **1. Entidad `NivelSkill.cs`** ? Ya estaba correcto
-
-```csharp
-public class NivelSkill
-{
-    [BsonId]
-    [BsonRepresentation(BsonType.ObjectId)]
-    public string? Id { get; set; }  // ObjectId como string
-
-    [BsonElement("codigo")]
-    public int Codigo { get; set; }  // 0, 1, 2, 3...
-
-    [BsonElement("nombre")]
-    public string Nombre { get; set; } = null!;
-}
-```
-
----
-
-### **2. DTOs `NivelSkillDtos.cs`** ? Ya estaban correctos
-
-```csharp
-// Para crear (POST) - Solo envías codigo y nombre
-public class NivelSkillCreateDto
-{
-    public int Codigo { get; set; }
-    public string Nombre { get; set; } = null!;
-}
-
-// Para actualizar (PUT) - Solo envías codigo y nombre
-public class NivelSkillUpdateDto
-{
-    public int Codigo { get; set; }
-    public string Nombre { get; set; } = null!;
-}
-
-// Para leer (respuestas GET/POST/PUT) - Incluye el Id generado
-public class NivelSkillReadDto
-{
-    public string Id { get; set; } = null!;  // ObjectId como string
-    public int Codigo { get; set; }
-    public string Nombre { get; set; } = null!;
-}
-```
-
----
-
-### **3. Interfaz `INivelSkillService.cs`** ? ACTUALIZADO
-
-**Cambios:**
-- `GetByIdAsync(int id)` ? `GetByIdAsync(string id)`
-- `UpdateAsync(int id, ...)` ? `UpdateAsync(string id, ...)`
-- `DeleteAsync(int id)` ? `DeleteAsync(string id)`
-
-```csharp
-public interface INivelSkillService
-{
-    Task<NivelSkillReadDto> CreateAsync(NivelSkillCreateDto createDto);
-    Task<IEnumerable<NivelSkillReadDto>> GetAllAsync();
-    Task<NivelSkillReadDto?> GetByIdAsync(string id);        // ? Cambiado a string
-    Task<NivelSkillReadDto?> UpdateAsync(string id, NivelSkillUpdateDto updateDto);  // ? Cambiado
-    Task<bool> DeleteAsync(string id);                        // ? Cambiado a string
-}
-```
-
----
-
-### **4. Servicio `NivelSkillService.cs`** ? ACTUALIZADO
-
-**Cambios principales:**
-
-#### **CreateAsync** - No establece Id, MongoDB lo genera:
+#### En `NivelSkillService.cs`:
 ```csharp
 public async Task<NivelSkillReadDto> CreateAsync(NivelSkillCreateDto createDto)
 {
     var nivel = new NivelSkill
     {
-        Codigo = createDto.Codigo,
+        Id = createDto.Id,
         Nombre = createDto.Nombre
-        // ? Id se deja null, MongoDB lo generará automáticamente
     };
 
     try
     {
         var nuevoNivel = await _repository.CreateAsync(nivel);
-        return MapToReadDto(nuevoNivel);  // Devuelve con Id generado
+        return MapToReadDto(nuevoNivel);
     }
     catch (MongoWriteException ex) when (ex.WriteError?.Category == ServerErrorCategory.DuplicateKey)
     {
-        throw new InvalidOperationException($"Ya existe un nivel de skill con código {createDto.Codigo}", ex);
+        throw new InvalidOperationException($"Ya existe un nivel de skill con ID {createDto.Id}", ex);
     }
 }
 ```
 
-#### **UpdateAsync** - Usa string id:
+#### En `NivelesSkillController.cs`:
 ```csharp
-public async Task<NivelSkillReadDto?> UpdateAsync(string id, NivelSkillUpdateDto updateDto)
+[HttpPost]
+public async Task<IActionResult> Create([FromBody] NivelSkillCreateDto createDto)
 {
-    var existente = await _repository.GetByIdAsync(id);
-    if (existente == null) return null;
-
-    var nivelActualizado = new NivelSkill
+    if (!ModelState.IsValid)
     {
-        Id = id,                      // ? Usa el ObjectId de la URL
-        Codigo = updateDto.Codigo,    // ? Actualiza código
-        Nombre = updateDto.Nombre     // ? Actualiza nombre
-    };
-
-    var ok = await _repository.UpdateAsync(id, nivelActualizado);
-    if (!ok) return null;
-
-    return MapToReadDto(nivelActualizado);
-}
-```
-
-#### **MapToReadDto** - Mapea todos los campos:
-```csharp
-private static NivelSkillReadDto MapToReadDto(NivelSkill n)
-{
-    return new NivelSkillReadDto
-    {
-        Id = n.Id!,           // ? ObjectId
-        Codigo = n.Codigo,    // ? Código del nivel
-        Nombre = n.Nombre     // ? Nombre del nivel
-    };
-}
-```
-
----
-
-### **5. Repositorio `NivelSkillRepository.cs`** ? Ya estaba correcto
-
-```csharp
-public class NivelSkillRepository : INivelSkillRepository
-{
-    private readonly IMongoCollection<NivelSkill> _nivelesSkill;
-
-    public NivelSkillRepository(IMongoDatabase database)
-    {
-        _nivelesSkill = database.GetCollection<NivelSkill>("nivelskills");
+        return BadRequest(ModelState);
     }
 
-    public async Task<NivelSkill> CreateAsync(NivelSkill nivelSkill)
-    {
-        // ? No establecer Id, dejar que MongoDB lo genere automáticamente
-        await _nivelesSkill.InsertOneAsync(nivelSkill);
-        return nivelSkill; // MongoDB habrá asignado el Id automáticamente
-    }
-
-    public async Task<NivelSkill?> GetByIdAsync(string id)
-    {
-        return await _nivelesSkill
-            .Find(n => n.Id == id)  // ? Busca por ObjectId (string)
-            .FirstOrDefaultAsync();
-    }
-
-    public async Task<bool> UpdateAsync(string id, NivelSkill nivelSkill)
-    {
-        nivelSkill.Id = id;  // ? Asegura que el Id coincida
-
-        var result = await _nivelesSkill.ReplaceOneAsync(
-            n => n.Id == id,
-            nivelSkill,
-            new ReplaceOptions { IsUpsert = false }
-        );
-
-        return result.ModifiedCount > 0;
-    }
-
-    public async Task<bool> DeleteAsync(string id)
-    {
-        var result = await _nivelesSkill.DeleteOneAsync(n => n.Id == id);
-        return result.DeletedCount > 0;
-    }
-}
-```
-
----
-
-### **6. Controller `NivelesSkillController.cs`** ? ACTUALIZADO
-
-**Cambios:**
-- `{id:int}` ? `{id}` (ahora acepta strings)
-- `int id` ? `string id` en todos los métodos
-
-```csharp
-[Route("api/[controller]")]
-[ApiController]
-public class NivelesSkillController : ControllerBase
-{
-    // GET: api/NivelesSkill
-    [HttpGet]
-    public async Task<IActionResult> GetAll() { ... }
-
-    // GET: api/NivelesSkill/6736c2b4f2a0455da3041942
-    [HttpGet("{id}")]  // ? Sin restricción :int
-    public async Task<IActionResult> GetById(string id) { ... }  // ? string id
-
-    // POST: api/NivelesSkill
-    [HttpPost]
-    public async Task<IActionResult> Create([FromBody] NivelSkillCreateDto createDto)
+    try
     {
         var nuevoNivel = await _service.CreateAsync(createDto);
         return CreatedAtAction(nameof(GetById), new { id = nuevoNivel.Id }, nuevoNivel);
-        // ? Devuelve 201 Created con Location header y el objeto con Id
     }
-
-    // PUT: api/NivelesSkill/6736c2b4f2a0455da3041942
-    [HttpPut("{id}")]  // ? Sin restricción :int
-    public async Task<IActionResult> Update(string id, [FromBody] NivelSkillUpdateDto updateDto)
+    catch (InvalidOperationException ex) when (ex.Message.Contains("Ya existe"))
     {
-        var nivelActualizado = await _service.UpdateAsync(id, updateDto);
-        if (nivelActualizado == null)
-        {
-            return NotFound(new { message = $"Nivel de skill con ID '{id}' no encontrado" });
-        }
-        return Ok(nivelActualizado);  // ? Devuelve 200 OK con objeto actualizado
-    }
-
-    // DELETE: api/NivelesSkill/6736c2b4f2a0455da3041942
-    [HttpDelete("{id}")]  // ? Sin restricción :int
-    public async Task<IActionResult> Delete(string id)
-    {
-        var eliminado = await _service.DeleteAsync(id);
-        if (!eliminado)
-        {
-            return NotFound(new { message = $"Nivel de skill con ID '{id}' no encontrado" });
-        }
-        return NoContent();  // ? Devuelve 204 No Content
+        return Conflict(new { message = ex.Message });
     }
 }
 ```
 
+**Resultado:**
+- ? POST con ID nuevo ? **201 Created** con el objeto creado
+- ? POST con ID duplicado ? **409 Conflict** con mensaje claro: `"Ya existe un nivel de skill con ID {id}"`
+
 ---
 
-## ?? Ejemplos de Uso
+### 2. **Error PUT retornando 404 cuando el registro existe**
 
-### **1. POST - Crear un nuevo nivel**
-
-**Request:**
-```http
-POST /api/NivelesSkill
-Content-Type: application/json
-
-{
-  "codigo": 0,
-  "nombre": "no iniciado"
-}
-```
-
-**Response:** `201 Created`
+**Problema Original:**
 ```json
 {
-  "id": "6736c2b4f2a0455da3041942",
-  "codigo": 0,
-  "nombre": "no iniciado"
+  "message": "Nivel de skill con ID '0' no encontrado"
 }
 ```
 
-**Headers:**
-```
-Location: https://localhost:5001/api/NivelesSkill/6736c2b4f2a0455da3041942
-```
+**Causa Posible:**
+- El filtro de búsqueda en MongoDB no estaba funcionando correctamente
+- El ID `0` (int) podría tener problemas de comparación
 
----
-
-### **2. GET - Obtener todos los niveles**
-
-**Request:**
-```http
-GET /api/NivelesSkill
-```
-
-**Response:** `200 OK`
-```json
-[
-  {
-    "id": "6736c2b4f2a0455da3041942",
-    "codigo": 0,
-    "nombre": "no iniciado"
-  },
-  {
-    "id": "6736c2b5f2a0455da3041943",
-    "codigo": 1,
-    "nombre": "basico"
-  }
-]
-```
-
----
-
-### **3. GET BY ID - Obtener un nivel específico**
-
-**Request:**
-```http
-GET /api/NivelesSkill/6736c2b4f2a0455da3041942
-```
-
-**Response:** `200 OK`
-```json
+**Verificación:**
+El código del Repository estaba correcto:
+```csharp
+public async Task<NivelSkill?> GetByIdAsync(int id)
 {
-  "id": "6736c2b4f2a0455da3041942",
-  "codigo": 0,
-  "nombre": "no iniciado"
+    return await _nivelesSkill
+        .Find(n => n.Id == id)
+        .FirstOrDefaultAsync();
 }
 ```
 
----
-
-### **4. PUT - Actualizar un nivel existente**
-
-**Request:**
-```http
-PUT /api/NivelesSkill/6736c2b4f2a0455da3041942
-Content-Type: application/json
-
-{
-  "codigo": 1,
-  "nombre": "básico"
-}
-```
-
-**Response:** `200 OK`
-```json
-{
-  "id": "6736c2b4f2a0455da3041942",
-  "codigo": 1,
-  "nombre": "básico"
-}
-```
+**Solución:**
+- El código ya está correcto
+- El problema podría ser:
+  1. Nombre de colección incorrecto (verificar que sea exactamente `"nivelskills"`)
+  2. Nombre de base de datos incorrecto (verificar `"talento_db"`)
+  3. Problema de conexión SSL (ya solucionado en Program.cs)
 
 ---
 
-### **5. DELETE - Eliminar un nivel**
+## ?? Archivos Modificados
 
-**Request:**
-```http
-DELETE /api/NivelesSkill/6736c2b4f2a0455da3041942
-```
+### 1. `NivelSkillService.cs`
+- ? Agregado manejo de `MongoWriteException` para duplicados
+- ? Lanza `InvalidOperationException` con mensaje claro
 
-**Response:** `204 No Content`
+### 2. `NivelesSkillController.cs`
+- ? Agregado try-catch en método `Create`
+- ? Retorna `409 Conflict` para IDs duplicados
+- ? Retorna `404 Not Found` solo cuando realmente no existe
 
----
-
-## ?? Tabla de Respuestas HTTP
-
-| Operación | Endpoint | Body | Respuesta Exitosa | Respuesta Error |
-|-----------|----------|------|-------------------|-----------------|
-| GET ALL | `/api/NivelesSkill` | - | `200 OK` + Array | - |
-| GET BY ID | `/api/NivelesSkill/{objectId}` | - | `200 OK` + Objeto | `404 Not Found` |
-| POST | `/api/NivelesSkill` | `{"codigo":0,"nombre":"..."}` | `201 Created` + Objeto con Id | `409 Conflict` (duplicado) |
-| PUT | `/api/NivelesSkill/{objectId}` | `{"codigo":1,"nombre":"..."}` | `200 OK` + Objeto actualizado | `404 Not Found` |
-| DELETE | `/api/NivelesSkill/{objectId}` | - | `204 No Content` | `404 Not Found` |
+### 3. `Program.cs` (ya corregido anteriormente)
+- ? Configuración SSL/TLS mejorada
+- ? Timeouts configurados
+- ? CheckCertificateRevocation deshabilitado
 
 ---
 
-## ? Verificación
+## ?? Pruebas Recomendadas
 
-- [x] Entidad usa `ObjectId` como string
-- [x] DTOs no requieren `Id` en Create/Update
-- [x] Repository maneja `string id` correctamente
-- [x] Service mapea `Codigo` y `Nombre` correctamente
-- [x] Controller acepta `string id` en rutas
-- [x] POST devuelve el `Id` generado por MongoDB
-- [x] PUT actualiza ambos campos: `codigo` y `nombre`
-- [x] DELETE verifica existencia antes de eliminar
+Use el archivo `TATA.GestiondeTalentoMoviles.API\Tests\NivelSkill.http` para probar:
+
+### Escenarios de Prueba:
+
+1. **GET /api/nivelesskill** ? Lista todos los niveles
+2. **GET /api/nivelesskill/0** ? Obtiene el nivel con ID 0 (existente)
+3. **GET /api/nivelesskill/99** ? Retorna 404 (no existe)
+4. **POST /api/nivelesskill** con ID nuevo ? 201 Created
+5. **POST /api/nivelesskill** con ID duplicado ? 409 Conflict
+6. **PUT /api/nivelesskill/0** ? Actualiza el nivel 0
+7. **PUT /api/nivelesskill/99** ? Retorna 404 (no existe)
+8. **DELETE /api/nivelesskill/1** ? Elimina el nivel 1
+9. **DELETE /api/nivelesskill/99** ? Retorna 404 (no existe)
+
+---
+
+## ?? Respuestas HTTP Esperadas
+
+| Operación | Endpoint | Body | Respuesta Esperada |
+|-----------|----------|------|-------------------|
+| GET ALL | `/api/nivelesskill` | - | 200 OK + Array |
+| GET BY ID (existe) | `/api/nivelesskill/0` | - | 200 OK + Objeto |
+| GET BY ID (no existe) | `/api/nivelesskill/99` | - | 404 Not Found |
+| POST (nuevo) | `/api/nivelesskill` | `{"id":1,"nombre":"intermedio"}` | 201 Created |
+| POST (duplicado) | `/api/nivelesskill` | `{"id":0,"nombre":"basico"}` | **409 Conflict** |
+| PUT (existe) | `/api/nivelesskill/0` | `{"nombre":"actualizado"}` | 200 OK |
+| PUT (no existe) | `/api/nivelesskill/99` | `{"nombre":"test"}` | 404 Not Found |
+| DELETE (existe) | `/api/nivelesskill/1` | - | 204 No Content |
+| DELETE (no existe) | `/api/nivelesskill/99` | - | 404 Not Found |
+
+---
+
+## ? Checklist de Verificación
+
 - [x] Compilación exitosa
-- [x] Archivo de pruebas HTTP actualizado
+- [x] Manejo de excepciones para duplicados implementado
+- [x] Controller retorna códigos HTTP correctos
+- [x] Service maneja errores de MongoDB
+- [x] Repository usa filtros correctos para int IDs
+- [x] Archivo de pruebas HTTP creado
 
 ---
 
 ## ?? Troubleshooting
 
-### Si PUT/GET devuelve 404:
-1. Verifica que estás usando el **ObjectId correcto** (24 caracteres hexadecimales)
-2. Copia el `id` exacto de la respuesta del POST
-3. Verifica la conexión a MongoDB Atlas (revisar `appsettings.json`)
+### Si PUT sigue retornando 404:
 
-### Si POST falla:
-1. Verifica que los campos `codigo` y `nombre` estén en el body
-2. Verifica que `codigo` sea un número entero (int)
-3. Verifica la conexión SSL en `Program.cs`
+1. Verificar que la colección se llama exactamente `"nivelskills"` en MongoDB
+2. Verificar que la base de datos es `"talento_db"`
+3. Verificar que el documento tiene `_id: 0` (int, no string)
+4. Ejecutar este query en MongoDB Compass:
+   ```javascript
+   db.nivelskills.find({ "_id": 0 })
+   ```
+
+### Si POST sigue lanzando excepción:
+
+1. Verificar que el paquete `MongoDB.Driver` sea versión 3.0.0
+2. Limpiar y recompilar: `dotnet clean && dotnet build`
+3. Verificar la conexión SSL en `Program.cs`
 
 ---
 
-## ?? Notas Importantes
+## ?? Notas Adicionales
 
-- ? El `Id` es generado **automáticamente** por MongoDB
-- ? El POST **no requiere** enviar `id` en el body
-- ? El `codigo` puede repetirse (no hay índice único en ese campo)
-- ? El `_id` es único por defecto en MongoDB
-- ? Las rutas usan `/api/NivelesSkill` (plural, con mayúscula)
+- El ID `0` es válido en MongoDB cuando se usa `BsonRepresentation(BsonType.Int32)`
+- El manejo de excepciones usa pattern matching: `when (ex.WriteError?.Category == ServerErrorCategory.DuplicateKey)`
+- El método `Conflict()` retorna status code 409 HTTP
+- La ruta del controller es `/api/nivelesskill` (singular) por el atributo `[Route("api/[controller]")]`
 

@@ -23,27 +23,38 @@ namespace TATA.GestiondeTalentoMoviles.CORE.Entities
         [BsonElement("rolActual")]
         public string RolActual { get; set; } = null!;
 
-        // Array de skills del colaborador
+        // Array de ObjectIds que referencian a la colección skills
         [BsonElement("skills")]
-        public List<ColaboradorSkill> Skills { get; set; } = new();
+        [BsonRepresentation(BsonType.ObjectId)]
+        public List<string> Skills { get; set; } = new();
+
+        // Código de nivel que referencia a nivelskills.codigo (int)
+        [BsonElement("nivelCodigo")]
+        public int? NivelCodigo { get; set; }
+
+        // Array de certificaciones embebidas
+        [BsonElement("certificaciones")]
+        public List<CertificacionColaborador> Certificaciones { get; set; } = new();
 
         // Objeto disponibilidad
         [BsonElement("disponibilidad")]
         public DisponibilidadColaborador Disponibilidad { get; set; } = new();
     }
 
-    // Elemento del array "skills" en Mongo
-    public class ColaboradorSkill
+    // Certificación embebida en el colaborador
+    public class CertificacionColaborador
     {
-        [BsonElement("skillId")]
-        [BsonRepresentation(BsonType.ObjectId)]
-        public string SkillId { get; set; } = null!;  // referencia a Skill.Id
+        [BsonElement("nombre")]
+        public string Nombre { get; set; } = null!;
 
-        [BsonElement("nivelId")]
-        public int NivelId { get; set; }             // referencia a NivelSkill.Id
+        [BsonElement("imagenUrl")]
+        public string? ImagenUrl { get; set; }
 
-        [BsonElement("certificaciones")]
-        public List<string> Certificaciones { get; set; } = new();
+        [BsonElement("fechaObtencion")]
+        public DateTime? FechaObtencion { get; set; }
+
+        [BsonElement("estado")]
+        public string Estado { get; set; } = "vigente";
     }
 
     // Subdocumento "disponibilidad"

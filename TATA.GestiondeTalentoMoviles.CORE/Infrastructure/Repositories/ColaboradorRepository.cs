@@ -12,14 +12,15 @@ namespace TATA.GestiondeTalentoMoviles.CORE.Infrastructure.Repositories
 
         public ColaboradorRepository(IMongoDatabase database)
         {
-            // 👇 nombre EXACTO de la colección en MongoDB
-            _colaboradores = database.GetCollection<Colaborador>("colaborador");
+            // ✅ Nombre EXACTO de la colección en MongoDB
+            _colaboradores = database.GetCollection<Colaborador>("colaboradores");
         }
 
         public async Task<Colaborador> CreateAsync(Colaborador colaborador)
         {
+            // ✅ No establecer Id, dejar que MongoDB lo genere automáticamente
             await _colaboradores.InsertOneAsync(colaborador);
-            return colaborador;
+            return colaborador; // MongoDB habrá asignado el Id automáticamente
         }
 
         public async Task<IEnumerable<Colaborador>> GetAllAsync()
@@ -36,7 +37,7 @@ namespace TATA.GestiondeTalentoMoviles.CORE.Infrastructure.Repositories
 
         public async Task<bool> UpdateAsync(string id, Colaborador colaborador)
         {
-            // nos aseguramos de que el Id del documento coincida con el que se está actualizando
+            // ✅ Asegurar que el Id del documento coincida con el que se está actualizando
             colaborador.Id = id;
 
             var result = await _colaboradores.ReplaceOneAsync(
@@ -50,7 +51,7 @@ namespace TATA.GestiondeTalentoMoviles.CORE.Infrastructure.Repositories
 
         public async Task<bool> DeleteAsync(string id)
         {
-            // Borrado lógico: solo marcamos la disponibilidad como "Inactivo"
+            // ✅ Borrado lógico: marcar disponibilidad como "Inactivo"
             var update = Builders<Colaborador>.Update
                 .Set(c => c.Disponibilidad.Estado, "Inactivo");
 
@@ -61,6 +62,5 @@ namespace TATA.GestiondeTalentoMoviles.CORE.Infrastructure.Repositories
 
             return result.ModifiedCount > 0;
         }
-
     }
 }

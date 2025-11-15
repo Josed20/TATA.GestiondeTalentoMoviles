@@ -1,29 +1,41 @@
-﻿using System.Collections.Generic;
+﻿using System;
+using System.Collections.Generic;
 
 namespace TATA.GestiondeTalentoMoviles.CORE.Core.DTOs
 {
-    // DTO para cada skill dentro del colaborador (CREATE)
-    public class ColaboradorSkillCreateDto
+    // ====================================
+    // DTOs para Certificaciones
+    // ====================================
+
+    public class CertificacionCreateDto
     {
-        public string SkillId { get; set; } = null!;  // Id de la colección skills
-        public int NivelId { get; set; }              // Id de la colección nivelskill (0..3)
-        public List<string> Certificaciones { get; set; } = new();
+        public string Nombre { get; set; } = null!;
+        public string? ImagenUrl { get; set; }
+        public DateTime? FechaObtencion { get; set; }
+        // Estado NO se envía, se setea en backend
     }
 
-    // DTO para cada skill dentro del colaborador (READ)
-    public class ColaboradorSkillReadDto
+    public class CertificacionReadDto
     {
-        public string SkillId { get; set; } = null!;
-        public int NivelId { get; set; }
-        public List<string> Certificaciones { get; set; } = new();
+        public string Nombre { get; set; } = null!;
+        public string? ImagenUrl { get; set; }
+        public DateTime? FechaObtencion { get; set; }
+        public string Estado { get; set; } = null!;
     }
 
-    // DTO para disponibilidad (lo usamos igual en create y read)
+    // ====================================
+    // DTO para Disponibilidad
+    // ====================================
+
     public class DisponibilidadDto
     {
         public string Estado { get; set; } = "Disponible";
         public int Dias { get; set; }
     }
+
+    // ====================================
+    // DTOs para Colaborador
+    // ====================================
 
     public class ColaboradorCreateDto
     {
@@ -32,14 +44,19 @@ namespace TATA.GestiondeTalentoMoviles.CORE.Core.DTOs
         public string Area { get; set; } = null!;
         public string RolActual { get; set; } = null!;
 
-        // Lista de skills que se asignarán al colaborador
-        public List<ColaboradorSkillCreateDto> Skills { get; set; } = new();
+        // Array de ObjectIds de skills
+        public List<string> Skills { get; set; } = new();
 
-        // Subobjeto de disponibilidad
+        // Código del nivel (referencia a nivelskills.codigo)
+        public int? NivelCodigo { get; set; }
+
+        // Array de certificaciones
+        public List<CertificacionCreateDto> Certificaciones { get; set; } = new();
+
+        // Objeto disponibilidad
         public DisponibilidadDto Disponibilidad { get; set; } = new();
     }
 
-    // DTO para actualizar un colaborador existente
     public class ColaboradorUpdateDto
     {
         public string Nombres { get; set; } = null!;
@@ -47,10 +64,16 @@ namespace TATA.GestiondeTalentoMoviles.CORE.Core.DTOs
         public string Area { get; set; } = null!;
         public string RolActual { get; set; } = null!;
 
-        // Lista de skills que se asignarán al colaborador
-        public List<ColaboradorSkillCreateDto> Skills { get; set; } = new();
+        // Array de ObjectIds de skills
+        public List<string> Skills { get; set; } = new();
 
-        // Subobjeto de disponibilidad
+        // Código del nivel
+        public int? NivelCodigo { get; set; }
+
+        // Array de certificaciones
+        public List<CertificacionCreateDto> Certificaciones { get; set; } = new();
+
+        // Objeto disponibilidad
         public DisponibilidadDto Disponibilidad { get; set; } = new();
     }
 
@@ -62,8 +85,16 @@ namespace TATA.GestiondeTalentoMoviles.CORE.Core.DTOs
         public string Area { get; set; } = null!;
         public string RolActual { get; set; } = null!;
 
-        public List<ColaboradorSkillReadDto> Skills { get; set; } = new();
+        // Array de ObjectIds de skills
+        public List<string> Skills { get; set; } = new();
 
+        // Código del nivel
+        public int? NivelCodigo { get; set; }
+
+        // Array de certificaciones con estado
+        public List<CertificacionReadDto> Certificaciones { get; set; } = new();
+
+        // Objeto disponibilidad
         public DisponibilidadDto Disponibilidad { get; set; } = new();
     }
 }
