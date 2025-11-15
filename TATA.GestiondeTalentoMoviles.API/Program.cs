@@ -102,6 +102,10 @@ builder.Services.AddScoped<IUserRepository, UserRepository>();
 
 // --- FIN DE REGISTRO DE SERVICIOS ---
 
+// Registrar vacantes
+builder.Services.AddScoped<IVacanteService, VacanteService>();
+builder.Services.AddScoped<IVacanteRepository, VacanteRepository>();
+
 // Servicios existentes de la plantilla
 builder.Services.AddControllers();
 builder.Services.AddEndpointsApiExplorer();
@@ -117,7 +121,7 @@ if (app.Environment.IsDevelopment())
     app.UseSwaggerUI();
 }
 
-app.UseHttpsRedirection();
+//app.UseHttpsRedirection();
 
 // ¡IMPORTANTE! UseAuthentication debe ir ANTES de UseAuthorization
 app.UseAuthentication();
@@ -132,6 +136,9 @@ try
 }
 catch (ReflectionTypeLoadException ex)
 {
+    foreach (var le in ex.LoaderExceptions) Console.WriteLine(le);
+    throw;
+}
     // Esto AHORA SÍ debería imprimir el error real
     Console.WriteLine("!!! ERROR DE CARGA DE REFLEXIÓN !!!");
     foreach (var loaderEx in ex.LoaderExceptions)
