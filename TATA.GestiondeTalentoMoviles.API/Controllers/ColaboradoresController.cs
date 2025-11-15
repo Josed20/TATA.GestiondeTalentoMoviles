@@ -17,7 +17,7 @@ namespace TATA.GestiondeTalentoMoviles.API.Controllers
 
         /// <summary>
         /// Obtiene todos los colaboradores
-        /// </summary>
+        /// </summary>  Resumen
         [HttpGet]
         public async Task<IActionResult> GetAll()
         {
