@@ -1,4 +1,5 @@
-﻿using MongoDB.Driver;
+﻿using MongoDB.Bson;
+using MongoDB.Driver;
 using TATA.GestiondeTalentoMoviles.CORE.Entities;
 using TATA.GestiondeTalentoMoviles.CORE.Interfaces;
 
@@ -24,7 +25,8 @@ public class RecomendacionRepository : IRecomendacionRepository
     public async Task<List<RecomendacionVacante>> GetRecomendacionesVacantes(string colaboradorId)
     {
         return await _vacantesCollection
-            .Find(r => r.colaboradorId == colaboradorId)
+            .Find(r => r.ColaboradorId == colaboradorId)
             .ToListAsync();
     }
+
 }

@@ -26,14 +26,12 @@ public class RecomendacionesController : ControllerBase
 
 
 
-    [HttpGet("vacantes/{id}")]
-    public async Task<IActionResult> GetVacantes(string id)
+    [HttpGet("vacantes/{colaboradorId}")]
+    public async Task<IActionResult> ObtenerRecomendacionesVacantes(string colaboradorId)
     {
-        if (!MongoDB.Bson.ObjectId.TryParse(id, out var objectId))
-            return BadRequest("El ID no es un ObjectId válido.");
-
-        var result = await _service.ObtenerRecomendacionesVacantes(objectId.ToString());
-        return Ok(result);
+        var data = await _service.ObtenerRecomendacionesVacantes(colaboradorId);
+        return Ok(data);
     }
+
 
 }

@@ -2,19 +2,37 @@
 using MongoDB.Bson.Serialization.Attributes;
 using System;
 using System.Collections.Generic;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
 
-public class RecomendacionVacante
+namespace TATA.GestiondeTalentoMoviles.CORE.Entities
 {
-    [BsonId]
-    [BsonRepresentation(BsonType.ObjectId)]
-    public string? Id { get; set; }
+    public class RecomendacionVacante
+    {
+        [BsonId]
+        [BsonRepresentation(BsonType.ObjectId)]
+        public string? Id { get; set; }
 
-    public string colaboradorId { get; set; } = null!;
-    public string VacanteId { get; set; } = null!;
-    public string Motivo { get; set; } = null!;
-    public int NivelMatch { get; set; } = 0;
-    public string NivelConfianza { get; set; } = null!;
+        [BsonElement("colaboradorId")]
+        public string ColaboradorId { get; set; } = null!;
+
+        [BsonElement("vacanteId")]
+        public string VacanteId { get; set; } = null!;
+
+        [BsonElement("fechaGeneracion")]
+        public DateTime FechaGeneracion { get; set; } = DateTime.UtcNow;
+
+        [BsonElement("detalle")]
+        public DetalleRecomendacionVacante Detalle { get; set; } = null!;
+    }
+
+    public class DetalleRecomendacionVacante
+    {
+        [BsonElement("motivo")]
+        public string Motivo { get; set; } = null!;
+
+        [BsonElement("nivelMatch")]
+        public int NivelMatch { get; set; } = 0;
+
+        [BsonElement("nivelConfianza")]
+        public string NivelConfianza { get; set; } = null!;
+    }
 }
