@@ -1,36 +1,38 @@
 ﻿using System;
 using System.Collections.Generic;
-using System.Text.Json.Serialization;
+using MongoDB.Bson;
+using MongoDB.Bson.Serialization.Attributes;
 
-namespace TATA.GestiondeTalentoMoviles.CORE.Core.Entities
+namespace TATA.GestiondeTalentoMoviles.CORE.Entities
 {
     public class Vacante
     {
-        [JsonPropertyName("_id")]
-        public string Id { get; set; } = string.Empty;
+        [BsonId]
+        [BsonRepresentation(BsonType.ObjectId)]
+        public string? Id { get; set; }
 
-        [JsonPropertyName("perfil_name")]
-        public string PerfilName { get; set; } = string.Empty;
+        [BsonElement("perfil_name")]
+        public string PerfilName { get; set; } = null!;
 
-        [JsonPropertyName("id_area")]
-        public string IdArea { get; set; } = string.Empty;
+        [BsonElement("id_area")]
+        public string IdArea { get; set; } = null!;
 
-        [JsonPropertyName("start_date")]
+        [BsonElement("start_date")]
         public DateTimeOffset StartDate { get; set; }
 
-        [JsonPropertyName("urgency")]
+        [BsonElement("urgency")]
         public int Urgency { get; set; }
 
-        [JsonPropertyName("state")]
+        [BsonElement("state")]
         public int State { get; set; }
 
-        [JsonPropertyName("id_rol")]
-        public string IdRol { get; set; } = string.Empty;
+        [BsonElement("id_rol")]
+        public string IdRol { get; set; } = null!;
 
-        [JsonPropertyName("certifications")]
+        [BsonElement("certifications")]
         public List<string> Certifications { get; set; } = new();
 
-        [JsonPropertyName("skills")]
+        [BsonElement("skills")]
         public List<string> Skills { get; set; } = new();
     }
 }

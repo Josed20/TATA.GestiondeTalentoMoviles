@@ -35,6 +35,10 @@ builder.Services.AddScoped<IColaboradorService, ColaboradorService>();
 builder.Services.AddScoped<IColaboradorRepository, ColaboradorRepository>();
 
 
+// Registrar vacantes
+builder.Services.AddScoped<IVacanteService, VacanteService>();
+builder.Services.AddScoped<IVacanteRepository, VacanteRepository>();
+
 // Servicios existentes de la plantilla
 builder.Services.AddControllers();
 builder.Services.AddEndpointsApiExplorer();

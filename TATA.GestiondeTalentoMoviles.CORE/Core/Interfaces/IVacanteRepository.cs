@@ -1,12 +1,15 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text;
+﻿using System.Collections.Generic;
 using System.Threading.Tasks;
+using TATA.GestiondeTalentoMoviles.CORE.Entities;
 
-namespace TATA.GestiondeTalentoMoviles.CORE.Core.Interfaces
+namespace TATA.GestiondeTalentoMoviles.CORE.Interfaces
 {
-    internal class IVacanteRepository
+    public interface IVacanteRepository
     {
+        Task<IEnumerable<Vacante>> GetAllAsync();
+        Task<Vacante?> GetByIdAsync(string id);
+        Task<Vacante> CreateAsync(Vacante vacante);
+        Task<Vacante?> UpdateAsync(string id, Vacante vacante);
+        Task<bool> DeleteAsync(string id);
     }
 }

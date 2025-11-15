@@ -1,12 +1,15 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text;
+﻿using System.Collections.Generic;
 using System.Threading.Tasks;
+using TATA.GestiondeTalentoMoviles.CORE.Core.DTOs;
 
-namespace TATA.GestiondeTalentoMoviles.CORE.Core.Interfaces
+namespace TATA.GestiondeTalentoMoviles.CORE.Interfaces
 {
-    internal class IVacanteService
+    public interface IVacanteService
     {
+        Task<IEnumerable<VacanteReadDto>> GetAllAsync();
+        Task<VacanteReadDto?> GetByIdAsync(string id);
+        Task<VacanteReadDto> CreateAsync(VacanteCreateDto createDto);
+        Task<VacanteReadDto?> UpdateAsync(string id, VacanteCreateDto updateDto);
+        Task<bool> DeleteAsync(string id);
     }
 }
