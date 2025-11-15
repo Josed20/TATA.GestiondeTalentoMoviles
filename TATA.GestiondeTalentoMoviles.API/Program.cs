@@ -1,5 +1,10 @@
 using Microsoft.Extensions.Options;
 using MongoDB.Driver;
+using TATA.GestiondeTalentoMoviles.CORE.Interfaces; // usar el namespace correcto de Interfaces
+using TATA.GestiondeTalentoMoviles.CORE.Services;   // usar el namespace correcto de Services
+using TATA.GestiondeTalentoMoviles.CORE.Core.Settings; // Este ya estaba bien
+using TATA.GestiondeTalentoMoviles.CORE.Infrastructure.Repositories;
+using TATA.GestiondeTalentoMoviles.CORE.Core.Interfaces; // Este ya estaba bien
 using TATA.GestiondeTalentoMoviles.CORE.Interfaces;
 using TATA.GestiondeTalentoMoviles.CORE.Services;
 using TATA.GestiondeTalentoMoviles.CORE.Core.Settings;
@@ -14,20 +19,28 @@ var builder = WebApplication.CreateBuilder(args);
 var conventionPack = new ConventionPack { new CamelCaseElementNameConvention() };
 ConventionRegistry.Register("camelCase", conventionPack, t => true);
 
-// --- INICIO DE CONFIGURACI”N DE MONGODB ---
+// --- INICIO DE CONFIGURACIÔøΩN DE MONGODB ---
+using Microsoft.AspNetCore.Authentication.JwtBearer;
+using Microsoft.IdentityModel.Tokens;
+using System.Text;
+using TATA.GestiondeTalentoMoviles.CORE.Core.Interfaces;
+using TATA.GestiondeTalentoMoviles.CORE.Core.Services;
 
-// 1. Cargar la configuraciÛn de appsettings.json
+var builder = WebApplication.CreateBuilder(args);
+
+// --- INICIO DE CONFIGURACI√ìN DE MONGODB ---
+
+// 1. Cargar la configuraci√≥n de appsettings.json
 builder.Services.Configure<MongoDbSettings>(
     builder.Configuration.GetSection("MongoDbSettings")
 );
 
-// 2. Registrar el cliente de MongoDB como Singleton (°Esto es correcto!)
+// 2. Registrar el cliente de MongoDB como Singleton
 builder.Services.AddSingleton<IMongoClient>(s =>
     new MongoClient(builder.Configuration.GetValue<string>("MongoDbSettings:ConnectionString"))
 );
 
 // 3. Registrar la base de datos (IMongoDatabase)
-// CAMBIADO A AddTransient como solicitaste
 builder.Services.AddTransient<IMongoDatabase>(s =>
 {
     var settings = s.GetRequiredService<IOptions<MongoDbSettings>>().Value;
@@ -35,10 +48,56 @@ builder.Services.AddTransient<IMongoDatabase>(s =>
     return client.GetDatabase(settings.DatabaseName);
 });
 
-// --- FIN DE CONFIGURACI”N DE MONGODB ---
+// --- FIN DE CONFIGURACI√ìN DE MONGODB ---
 
 // 4. Registrar tus servicios y repositorios
-// CAMBIADO A AddTransient como solicitaste
+//Colaborador
+builder.Services.AddScoped<IColaboradorService, ColaboradorService>();
+builder.Services.AddScoped<IColaboradorRepository, ColaboradorRepository>();
+//Skill
+builder.Services.AddScoped<ISkillService, SkillService>();
+builder.Services.AddScoped<ISkillRepository, SkillRepository>();
+//NivelSkill
+builder.Services.AddScoped<INivelSkillService, NivelSkillService>();
+builder.Services.AddScoped<INivelSkillRepository, NivelSkillRepository>();
+// --- INICIO DE CONFIGURACI√ìN DE JWT ---
+
+// Configurar autenticaci√≥n JWT
+builder.Services.AddAuthentication(options =>
+{
+    options.DefaultAuthenticateScheme = JwtBearerDefaults.AuthenticationScheme;
+    options.DefaultChallengeScheme = JwtBearerDefaults.AuthenticationScheme;
+})
+.AddJwtBearer(options =>
+{
+    var jwtKey = builder.Configuration["Jwt:Key"];
+    var jwtIssuer = builder.Configuration["Jwt:Issuer"];
+    var jwtAudience = builder.Configuration["Jwt:Audience"];
+
+    if (string.IsNullOrEmpty(jwtKey) || string.IsNullOrEmpty(jwtIssuer) || string.IsNullOrEmpty(jwtAudience))
+    {
+        throw new InvalidOperationException("La configuraci√≥n de JWT no est√° completa en appsettings.json");
+    }
+
+    options.TokenValidationParameters = new TokenValidationParameters
+    {
+        ValidateIssuer = true,
+        ValidateAudience = true,
+        ValidateLifetime = true,
+        ValidateIssuerSigningKey = true,
+        ValidIssuer = jwtIssuer,
+        ValidAudience = jwtAudience,
+        IssuerSigningKey = new SymmetricSecurityKey(Encoding.UTF8.GetBytes(jwtKey)),
+        ClockSkew = TimeSpan.Zero // Elimina el tiempo de gracia por defecto de 5 minutos
+    };
+});
+
+builder.Services.AddAuthorization();
+
+// --- FIN DE CONFIGURACI√ìN DE JWT ---
+
+// 4. Registrar servicios y repositorios
+// Colaboradores
 builder.Services.AddTransient<IColaboradorService, ColaboradorService>();
 builder.Services.AddTransient<IColaboradorRepository, ColaboradorRepository>();
 
@@ -51,14 +110,21 @@ builder.Services.AddTransient<IRolRepository, RolRepository>();
 
 builder.Services.AddTransient<IAreaService, AreaService>();
 builder.Services.AddTransient<IAreaRepository, AreaRepository>();
+// Roles
+builder.Services.AddTransient<IRoleService, RoleService>();
+builder.Services.AddTransient<IRoleRepository, RoleRepository>();
+
+// Autenticaci√≥n (Auth)
+builder.Services.AddTransient<IAuthService, AuthService>();
+builder.Services.AddTransient<IUserRepository, UserRepository>();
 
 // Servicios existentes de la plantilla
 builder.Services.AddControllers();
 builder.Services.AddEndpointsApiExplorer();
 builder.Services.AddSwaggerGen();
 
-// --- CORRECCI”N DEL TRY-CATCH ---
-// Declaramos 'app' aquÌ para que sea accesible en todo el archivo
+// --- CORRECCI√ìN DEL TRY-CATCH ---
+// Declaramos 'app' aqu√≠ para que sea accesible en todo el archivo
 WebApplication app;
 
 // 'builder.Build()' rara vez falla.
@@ -73,10 +139,12 @@ if (app.Environment.IsDevelopment())
 
 app.UseHttpsRedirection();
 
+// ¬°IMPORTANTE! UseAuthentication debe ir ANTES de UseAuthorization
+app.UseAuthentication();
 app.UseAuthorization();
 
 // --- INICIO DEL BLOQUE DE DEBUG ---
-// El error ReflectionTypeLoadException sucede aquÌ, cuando .NET
+// El error ReflectionTypeLoadException sucede aqu√≠, cuando .NET
 // intenta escanear todos tus 'Controllers'.
 try
 {
@@ -84,17 +152,17 @@ try
 }
 catch (ReflectionTypeLoadException ex)
 {
-    // Esto AHORA SÕ deberÌa imprimir el error real
-    Console.WriteLine("!!! ERROR DE CARGA DE REFLEXI”N !!!");
+    // Esto AHORA S√ç deber√≠a imprimir el error real
+    Console.WriteLine("!!! ERROR DE CARGA DE REFLEXI√ìN !!!");
     foreach (var loaderEx in ex.LoaderExceptions)
     {
-        // Esto te dir· quÈ DLL o paquete NuGet est· causando el conflicto
+        // Esto te dir√° qu√© DLL o paquete NuGet est√° causando el conflicto
         if (loaderEx != null)
         {
             Console.WriteLine(loaderEx.Message);
         }
     }
-    // Lanza la excepciÛn principal para detener la app
+    // Lanza la excepci√≥n principal para detener la app
     throw;
 }
 // --- FIN DEL BLOQUE DE DEBUG ---
