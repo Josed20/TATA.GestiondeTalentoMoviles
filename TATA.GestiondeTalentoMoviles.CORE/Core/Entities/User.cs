@@ -1,4 +1,4 @@
-﻿using System;
+using System;
 using System.Collections.Generic;
 using MongoDB.Bson;
 using MongoDB.Bson.Serialization.Attributes;
@@ -24,7 +24,6 @@ namespace TATA.GestiondeTalentoMoviles.CORE.Core.Entities
         public string Password { get; set; } = string.Empty;
 
         [BsonElement("roles")]
-        [BsonRepresentation(BsonType.ObjectId)]
         public List<string> Roles { get; set; } = new List<string>();
 
         [BsonElement("estado")]

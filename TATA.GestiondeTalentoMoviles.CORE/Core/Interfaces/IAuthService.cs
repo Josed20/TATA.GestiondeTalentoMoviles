@@ -1,7 +1,7 @@
 using System.Threading.Tasks;
 using TATA.GestiondeTalentoMoviles.CORE.Core.DTOs;
 
-namespace TATA.GestiondeTalentoMoviles.CORE.Interfaces
+namespace TATA.GestiondeTalentoMoviles.CORE.Core.Interfaces
 {
     public interface IAuthService
     {

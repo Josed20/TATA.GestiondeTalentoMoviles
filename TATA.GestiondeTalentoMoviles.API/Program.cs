@@ -1,17 +1,20 @@
+using Microsoft.AspNetCore.Authentication.JwtBearer;
+using Microsoft.IdentityModel.Tokens;
 using Microsoft.Extensions.Options;
 using MongoDB.Driver;
+using MongoDB.Bson.Serialization.Conventions;
 using TATA.GestiondeTalentoMoviles.CORE.Core.Interfaces;
 using TATA.GestiondeTalentoMoviles.CORE.Core.Services;
 using TATA.GestiondeTalentoMoviles.CORE.Core.Settings;
 using TATA.GestiondeTalentoMoviles.CORE.Infrastructure.Repositories;
 using System.Reflection;
-using Microsoft.AspNetCore.Authentication.JwtBearer;
-using Microsoft.IdentityModel.Tokens;
 using System.Text;
-using TATA.GestiondeTalentoMoviles.CORE.Interfaces;
-using TATA.GestiondeTalentoMoviles.CORE.Services;
 
 var builder = WebApplication.CreateBuilder(args);
+
+// Register camelCase convention so BSON keys like 'nombre' map to C# properties 'Nombre'
+var conventionPack = new ConventionPack { new CamelCaseElementNameConvention() };
+ConventionRegistry.Register("camelCase", conventionPack, t => true);
 
 // --- INICIO DE CONFIGURACIÓN DE MONGODB ---
 

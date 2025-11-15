@@ -9,10 +9,10 @@ using Microsoft.Extensions.Configuration;
 using Microsoft.IdentityModel.Tokens;
 using TATA.GestiondeTalentoMoviles.CORE.Core.DTOs;
 using TATA.GestiondeTalentoMoviles.CORE.Core.Entities;
-using TATA.GestiondeTalentoMoviles.CORE.Interfaces;
+using TATA.GestiondeTalentoMoviles.CORE.Core.Interfaces;
 using BCrypt.Net;
 
-namespace TATA.GestiondeTalentoMoviles.CORE.Services
+namespace TATA.GestiondeTalentoMoviles.CORE.Core.Services
 {
     public class AuthService : IAuthService
     {

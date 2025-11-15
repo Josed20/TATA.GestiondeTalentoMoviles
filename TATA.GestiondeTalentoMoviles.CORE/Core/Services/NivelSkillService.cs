@@ -6,7 +6,7 @@ using TATA.GestiondeTalentoMoviles.CORE.Core.DTOs;
 using TATA.GestiondeTalentoMoviles.CORE.Core.Interfaces;
 using TATA.GestiondeTalentoMoviles.CORE.Entities;
 
-namespace TATA.GestiondeTalentoMoviles.CORE.Services
+namespace TATA.GestiondeTalentoMoviles.CORE.Core.Services
 {
     public class NivelSkillService : INivelSkillService
     {

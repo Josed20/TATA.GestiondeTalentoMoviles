@@ -3,6 +3,7 @@ using Microsoft.AspNetCore.Mvc;
 using System;
 using System.Threading.Tasks;
 using TATA.GestiondeTalentoMoviles.CORE.Core.DTOs;
+using TATA.GestiondeTalentoMoviles.CORE.Core.Interfaces;
 using TATA.GestiondeTalentoMoviles.CORE.Interfaces;
 
 namespace TATA.GestiondeTalentoMoviles.API.Controllers
