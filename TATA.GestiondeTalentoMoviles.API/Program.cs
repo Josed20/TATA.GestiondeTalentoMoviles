@@ -7,8 +7,10 @@ using TATA.GestiondeTalentoMoviles.CORE.Core.Interfaces;
 using TATA.GestiondeTalentoMoviles.CORE.Core.Services;
 using TATA.GestiondeTalentoMoviles.CORE.Core.Settings;
 using TATA.GestiondeTalentoMoviles.CORE.Infrastructure.Repositories;
+using TATA.GestiondeTalentoMoviles.CORE.Interfaces;
 using System.Reflection;
 using System.Text;
+using TATA.GestiondeTalentoMoviles.CORE.Services;
 
 var builder = WebApplication.CreateBuilder(args);
 
@@ -136,10 +138,6 @@ try
 }
 catch (ReflectionTypeLoadException ex)
 {
-    foreach (var le in ex.LoaderExceptions) Console.WriteLine(le);
-    throw;
-}
-    // Esto AHORA SÍ debería imprimir el error real
     Console.WriteLine("!!! ERROR DE CARGA DE REFLEXIÓN !!!");
     foreach (var loaderEx in ex.LoaderExceptions)
     {
