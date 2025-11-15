@@ -57,11 +57,11 @@ namespace TATA.GestiondeTalentoMoviles.CORE.Services
             return data.Select(r => new RecomendacionVacanteDTO
             {
                 Id = r.Id,
-                colaboradorId = r.colaboradorId,
+                colaboradorId = r.ColaboradorId,
                 VacanteId = r.VacanteId,
-                Motivo = r.Motivo,
-                NivelMatch = r.NivelMatch,
-                NivelConfianza = r.NivelConfianza
+                Motivo = r.Detalle.Motivo,
+                NivelMatch = r.Detalle.NivelMatch,
+                NivelConfianza = r.Detalle.NivelConfianza
 
             }).ToList();
         }
