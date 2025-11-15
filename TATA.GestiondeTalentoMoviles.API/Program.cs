@@ -79,6 +79,10 @@ builder.Services.AddAuthorization();
 // Colaboradores
 builder.Services.AddScoped<IColaboradorService, ColaboradorService>();
 builder.Services.AddScoped<IColaboradorRepository, ColaboradorRepository>();
+builder.Services.AddScoped<ISolicitudRepository, SolicitudRepository>();
+builder.Services.AddScoped<ISolicitudService, SolicitudService>();
+builder.Services.AddScoped<IRecomendacionRepository, RecomendacionRepository>();
+builder.Services.AddScoped<IRecomendacionService, RecomendacionService>();
 
 // Skills
 builder.Services.AddScoped<ISkillService, SkillService>();
