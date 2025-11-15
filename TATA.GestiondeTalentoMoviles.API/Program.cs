@@ -6,6 +6,9 @@ using TATA.GestiondeTalentoMoviles.CORE.Core.Settings;
 using TATA.GestiondeTalentoMoviles.CORE.Infrastructure.Repositories;
 using TATA.GestiondeTalentoMoviles.CORE.Entities;
 using System.Reflection;
+using Microsoft.AspNetCore.Authentication.JwtBearer;
+using Microsoft.IdentityModel.Tokens;
+using System.Text;
 
 var builder = WebApplication.CreateBuilder(args);
 
@@ -16,13 +19,12 @@ builder.Services.Configure<MongoDbSettings>(
     builder.Configuration.GetSection("MongoDbSettings")
 );
 
-// 2. Registrar el cliente de MongoDB como Singleton (¡Esto es correcto!)
+// 2. Registrar el cliente de MongoDB como Singleton
 builder.Services.AddSingleton<IMongoClient>(s =>
     new MongoClient(builder.Configuration.GetValue<string>("MongoDbSettings:ConnectionString"))
 );
 
 // 3. Registrar la base de datos (IMongoDatabase)
-// CAMBIADO A AddTransient como solicitaste
 builder.Services.AddTransient<IMongoDatabase>(s =>
 {
     var settings = s.GetRequiredService<IOptions<MongoDbSettings>>().Value;
@@ -32,10 +34,50 @@ builder.Services.AddTransient<IMongoDatabase>(s =>
 
 // --- FIN DE CONFIGURACIÓN DE MONGODB ---
 
-// 4. Registrar tus servicios y repositorios
-// CAMBIADO A AddTransient como solicitaste
+// --- INICIO DE CONFIGURACIÓN DE JWT ---
+
+// Configurar autenticación JWT
+builder.Services.AddAuthentication(options =>
+{
+    options.DefaultAuthenticateScheme = JwtBearerDefaults.AuthenticationScheme;
+    options.DefaultChallengeScheme = JwtBearerDefaults.AuthenticationScheme;
+})
+.AddJwtBearer(options =>
+{
+    var jwtKey = builder.Configuration["Jwt:Key"];
+    var jwtIssuer = builder.Configuration["Jwt:Issuer"];
+    var jwtAudience = builder.Configuration["Jwt:Audience"];
+
+    if (string.IsNullOrEmpty(jwtKey) || string.IsNullOrEmpty(jwtIssuer) || string.IsNullOrEmpty(jwtAudience))
+    {
+        throw new InvalidOperationException("La configuración de JWT no está completa en appsettings.json");
+    }
+
+    options.TokenValidationParameters = new TokenValidationParameters
+    {
+        ValidateIssuer = true,
+        ValidateAudience = true,
+        ValidateLifetime = true,
+        ValidateIssuerSigningKey = true,
+        ValidIssuer = jwtIssuer,
+        ValidAudience = jwtAudience,
+        IssuerSigningKey = new SymmetricSecurityKey(Encoding.UTF8.GetBytes(jwtKey)),
+        ClockSkew = TimeSpan.Zero // Elimina el tiempo de gracia por defecto de 5 minutos
+    };
+});
+
+builder.Services.AddAuthorization();
+
+// --- FIN DE CONFIGURACIÓN DE JWT ---
+
+// 4. Registrar servicios y repositorios
+// Colaboradores
 builder.Services.AddTransient<IColaboradorService, ColaboradorService>();
 builder.Services.AddTransient<IColaboradorRepository, ColaboradorRepository>();
+
+// Autenticación (Auth)
+builder.Services.AddTransient<IAuthService, AuthService>();
+builder.Services.AddTransient<IUserRepository, UserRepository>();
 
 // Servicios existentes de la plantilla
 builder.Services.AddControllers();
@@ -58,6 +100,8 @@ if (app.Environment.IsDevelopment())
 
 app.UseHttpsRedirection();
 
+// ¡IMPORTANTE! UseAuthentication debe ir ANTES de UseAuthorization
+app.UseAuthentication();
 app.UseAuthorization();
 
 // --- INICIO DEL BLOQUE DE DEBUG ---
