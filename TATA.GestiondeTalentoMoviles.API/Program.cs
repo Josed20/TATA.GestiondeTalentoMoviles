@@ -32,6 +32,8 @@ builder.Services.AddScoped<IMongoDatabase>(s =>
 // 4. Registrar tus servicios y repositorios
 builder.Services.AddScoped<IColaboradorService, ColaboradorService>();
 builder.Services.AddScoped<IColaboradorRepository, ColaboradorRepository>();
+builder.Services.AddScoped<ISolicitudRepository, SolicitudRepository>();
+builder.Services.AddScoped<ISolicitudService, SolicitudService>();
 
 
 // Servicios existentes de la plantilla
