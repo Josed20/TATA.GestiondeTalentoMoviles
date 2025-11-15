@@ -9,6 +9,8 @@ using System.Reflection;
 using Microsoft.AspNetCore.Authentication.JwtBearer;
 using Microsoft.IdentityModel.Tokens;
 using System.Text;
+using TATA.GestiondeTalentoMoviles.CORE.Core.Interfaces;
+using TATA.GestiondeTalentoMoviles.CORE.Core.Services;
 
 var builder = WebApplication.CreateBuilder(args);
 
@@ -74,6 +76,10 @@ builder.Services.AddAuthorization();
 // Colaboradores
 builder.Services.AddTransient<IColaboradorService, ColaboradorService>();
 builder.Services.AddTransient<IColaboradorRepository, ColaboradorRepository>();
+
+// Roles
+builder.Services.AddTransient<IRoleService, RoleService>();
+builder.Services.AddTransient<IRoleRepository, RoleRepository>();
 
 // Autenticación (Auth)
 builder.Services.AddTransient<IAuthService, AuthService>();

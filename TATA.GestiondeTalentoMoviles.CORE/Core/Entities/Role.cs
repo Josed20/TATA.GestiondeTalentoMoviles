@@ -11,12 +11,6 @@ namespace TATA.GestiondeTalentoMoviles.CORE.Core.Entities
         public string? Id { get; set; }
 
         [BsonElement("nombre")]
-        public string Nombre { get; set; } = string.Empty; // Ej. "Admin", "Colaborador", "Manager"
-
-        [BsonElement("createdAt")]
-        public DateTime CreatedAt { get; set; } = DateTime.UtcNow;
-
-        [BsonElement("updatedAt")]
-        public DateTime UpdatedAt { get; set; } = DateTime.UtcNow;
+        public string Nombre { get; set; } = string.Empty;
     }
 }
