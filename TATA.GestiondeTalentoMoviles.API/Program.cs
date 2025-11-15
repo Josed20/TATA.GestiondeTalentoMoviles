@@ -1,21 +1,15 @@
 using Microsoft.Extensions.Options;
 using MongoDB.Driver;
-using TATA.GestiondeTalentoMoviles.CORE.Interfaces; // usar el namespace correcto de Interfaces
-using TATA.GestiondeTalentoMoviles.CORE.Services;   // usar el namespace correcto de Services
-using TATA.GestiondeTalentoMoviles.CORE.Core.Settings; // Este ya estaba bien
-using TATA.GestiondeTalentoMoviles.CORE.Infrastructure.Repositories;
-using TATA.GestiondeTalentoMoviles.CORE.Core.Interfaces; // Este ya estaba bien
-using TATA.GestiondeTalentoMoviles.CORE.Interfaces;
-using TATA.GestiondeTalentoMoviles.CORE.Services;
+using TATA.GestiondeTalentoMoviles.CORE.Core.Interfaces;
+using TATA.GestiondeTalentoMoviles.CORE.Core.Services;
 using TATA.GestiondeTalentoMoviles.CORE.Core.Settings;
 using TATA.GestiondeTalentoMoviles.CORE.Infrastructure.Repositories;
-using TATA.GestiondeTalentoMoviles.CORE.Entities;
 using System.Reflection;
 using Microsoft.AspNetCore.Authentication.JwtBearer;
 using Microsoft.IdentityModel.Tokens;
 using System.Text;
-using TATA.GestiondeTalentoMoviles.CORE.Core.Interfaces;
-using TATA.GestiondeTalentoMoviles.CORE.Core.Services;
+using TATA.GestiondeTalentoMoviles.CORE.Interfaces;
+using TATA.GestiondeTalentoMoviles.CORE.Services;
 
 var builder = WebApplication.CreateBuilder(args);
 
@@ -32,7 +26,7 @@ builder.Services.AddSingleton<IMongoClient>(s =>
 );
 
 // 3. Registrar la base de datos (IMongoDatabase)
-builder.Services.AddTransient<IMongoDatabase>(s =>
+builder.Services.AddScoped<IMongoDatabase>(s =>
 {
     var settings = s.GetRequiredService<IOptions<MongoDbSettings>>().Value;
     var client = s.GetRequiredService<IMongoClient>();
@@ -41,16 +35,6 @@ builder.Services.AddTransient<IMongoDatabase>(s =>
 
 // --- FIN DE CONFIGURACIÓN DE MONGODB ---
 
-// 4. Registrar tus servicios y repositorios
-//Colaborador
-builder.Services.AddScoped<IColaboradorService, ColaboradorService>();
-builder.Services.AddScoped<IColaboradorRepository, ColaboradorRepository>();
-//Skill
-builder.Services.AddScoped<ISkillService, SkillService>();
-builder.Services.AddScoped<ISkillRepository, SkillRepository>();
-//NivelSkill
-builder.Services.AddScoped<INivelSkillService, NivelSkillService>();
-builder.Services.AddScoped<INivelSkillRepository, NivelSkillRepository>();
 // --- INICIO DE CONFIGURACIÓN DE JWT ---
 
 // Configurar autenticación JWT
@@ -87,30 +71,37 @@ builder.Services.AddAuthorization();
 
 // --- FIN DE CONFIGURACIÓN DE JWT ---
 
-// 4. Registrar servicios y repositorios
+// --- REGISTRAR SERVICIOS Y REPOSITORIOS ---
+
 // Colaboradores
-builder.Services.AddTransient<IColaboradorService, ColaboradorService>();
-builder.Services.AddTransient<IColaboradorRepository, ColaboradorRepository>();
+builder.Services.AddScoped<IColaboradorService, ColaboradorService>();
+builder.Services.AddScoped<IColaboradorRepository, ColaboradorRepository>();
+
+// Skills
+builder.Services.AddScoped<ISkillService, SkillService>();
+builder.Services.AddScoped<ISkillRepository, SkillRepository>();
+
+// NivelSkills
+builder.Services.AddScoped<INivelSkillService, NivelSkillService>();
+builder.Services.AddScoped<INivelSkillRepository, NivelSkillRepository>();
 
 // Roles
-builder.Services.AddTransient<IRoleService, RoleService>();
-builder.Services.AddTransient<IRoleRepository, RoleRepository>();
+builder.Services.AddScoped<IRoleService, RoleService>();
+builder.Services.AddScoped<IRoleRepository, RoleRepository>();
 
 // Autenticación (Auth)
-builder.Services.AddTransient<IAuthService, AuthService>();
-builder.Services.AddTransient<IUserRepository, UserRepository>();
+builder.Services.AddScoped<IAuthService, AuthService>();
+builder.Services.AddScoped<IUserRepository, UserRepository>();
+
+// --- FIN DE REGISTRO DE SERVICIOS ---
 
 // Servicios existentes de la plantilla
 builder.Services.AddControllers();
 builder.Services.AddEndpointsApiExplorer();
 builder.Services.AddSwaggerGen();
 
-// --- CORRECCIÓN DEL TRY-CATCH ---
-// Declaramos 'app' aquí para que sea accesible en todo el archivo
-WebApplication app;
-
-// 'builder.Build()' rara vez falla.
-app = builder.Build();
+// Construir la aplicación
+WebApplication app = builder.Build();
 
 // Configure the HTTP request pipeline.
 if (app.Environment.IsDevelopment())

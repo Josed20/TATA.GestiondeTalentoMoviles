@@ -1,12 +1,8 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text;
+﻿using System.Collections.Generic;
 using System.Threading.Tasks;
+using TATA.GestiondeTalentoMoviles.CORE.Entities;
 
-using TATA.GestiondeTalentoMoviles.CORE.Entities; // corregido namespace de Entities
-
-namespace TATA.GestiondeTalentoMoviles.CORE.Interfaces // corregido namespace de Interfaces
+namespace TATA.GestiondeTalentoMoviles.CORE.Core.Interfaces
 {
     public interface IColaboradorRepository
     {

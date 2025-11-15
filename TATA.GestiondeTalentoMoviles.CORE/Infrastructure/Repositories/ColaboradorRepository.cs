@@ -1,8 +1,8 @@
 ﻿using System.Collections.Generic;
 using System.Threading.Tasks;
 using MongoDB.Driver;
+using TATA.GestiondeTalentoMoviles.CORE.Core.Interfaces;
 using TATA.GestiondeTalentoMoviles.CORE.Entities;
-using TATA.GestiondeTalentoMoviles.CORE.Interfaces;
 
 namespace TATA.GestiondeTalentoMoviles.CORE.Infrastructure.Repositories
 {

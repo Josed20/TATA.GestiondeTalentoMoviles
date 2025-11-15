@@ -1,6 +1,6 @@
 ﻿using Microsoft.AspNetCore.Mvc;
 using TATA.GestiondeTalentoMoviles.CORE.Core.DTOs;
-using TATA.GestiondeTalentoMoviles.CORE.Interfaces;
+using TATA.GestiondeTalentoMoviles.CORE.Core.Interfaces;
 
 namespace TATA.GestiondeTalentoMoviles.API.Controllers
 {

@@ -4,9 +4,8 @@ using System.Threading.Tasks;
 using TATA.GestiondeTalentoMoviles.CORE.Core.DTOs;
 using TATA.GestiondeTalentoMoviles.CORE.Core.Interfaces;
 using TATA.GestiondeTalentoMoviles.CORE.Entities;
-using TATA.GestiondeTalentoMoviles.CORE.Interfaces;
 
-namespace TATA.GestiondeTalentoMoviles.CORE.Services
+namespace TATA.GestiondeTalentoMoviles.CORE.Core.Services
 {
     public class SkillService : ISkillService
     {
