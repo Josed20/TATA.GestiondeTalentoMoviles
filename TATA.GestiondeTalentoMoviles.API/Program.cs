@@ -81,6 +81,9 @@ builder.Services.AddAuthorization();
 // Colaboradores
 builder.Services.AddScoped<IColaboradorService, ColaboradorService>();
 builder.Services.AddScoped<IColaboradorRepository, ColaboradorRepository>();
+// Registro del servicio y repositorio de Evaluacion
+builder.Services.AddScoped<IEvaluacionService, EvaluacionService>();
+builder.Services.AddScoped<IEvaluacionRepository, EvaluacionRepository>();
 builder.Services.AddScoped<ISolicitudRepository, SolicitudRepository>();
 builder.Services.AddScoped<ISolicitudService, SolicitudService>();
 builder.Services.AddScoped<IRecomendacionRepository, RecomendacionRepository>();
@@ -111,7 +114,7 @@ builder.Services.AddScoped<IVacanteRepository, VacanteRepository>();
 // Servicios existentes de la plantilla
 builder.Services.AddControllers();
 builder.Services.AddEndpointsApiExplorer();
-builder.Services.AddSwaggerGen();
+builder.Services.AddOpenApi();
 
 // Construir la aplicación
 WebApplication app = builder.Build();
@@ -119,8 +122,7 @@ WebApplication app = builder.Build();
 // Configure the HTTP request pipeline.
 if (app.Environment.IsDevelopment())
 {
-    app.UseSwagger();
-    app.UseSwaggerUI();
+    app.MapOpenApi();
 }
 
 //app.UseHttpsRedirection();
@@ -152,4 +154,4 @@ catch (ReflectionTypeLoadException ex)
 }
 // --- FIN DEL BLOQUE DE DEBUG ---
 
-app.Run();
+app.Run();app.Run();
