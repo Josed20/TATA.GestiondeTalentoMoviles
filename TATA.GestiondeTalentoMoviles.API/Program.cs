@@ -3,7 +3,8 @@ using MongoDB.Driver;
 using TATA.GestiondeTalentoMoviles.CORE.Interfaces; // usar el namespace correcto de Interfaces
 using TATA.GestiondeTalentoMoviles.CORE.Services;   // usar el namespace correcto de Services
 using TATA.GestiondeTalentoMoviles.CORE.Core.Settings; // Este ya estaba bien
-using TATA.GestiondeTalentoMoviles.CORE.Infrastructure.Repositories; // Este ya estaba bien
+using TATA.GestiondeTalentoMoviles.CORE.Infrastructure.Repositories;
+
 
 var builder = WebApplication.CreateBuilder(args);
 
@@ -32,20 +33,21 @@ builder.Services.AddScoped<IMongoDatabase>(s =>
 // 4. Registrar tus servicios y repositorios
 builder.Services.AddScoped<IColaboradorService, ColaboradorService>();
 builder.Services.AddScoped<IColaboradorRepository, ColaboradorRepository>();
-
+// Registro del servicio y repositorio de Evaluacion
+builder.Services.AddScoped<IEvaluacionService, EvaluacionService>();
+builder.Services.AddScoped<IEvaluacionRepository, EvaluacionRepository>();
 
 // Servicios existentes de la plantilla
 builder.Services.AddControllers();
 builder.Services.AddEndpointsApiExplorer();
-builder.Services.AddSwaggerGen();
+builder.Services.AddOpenApi();
 
-var app = builder.Build(); // El error debería desaparecer de aquí
+var app = builder.Build();
 
 // Configure the HTTP request pipeline.
 if (app.Environment.IsDevelopment())
 {
-    app.UseSwagger();
-    app.UseSwaggerUI();
+    app.MapOpenApi();
 }
 
 app.UseHttpsRedirection();
@@ -54,4 +56,4 @@ app.UseAuthorization();
 
 app.MapControllers();
 
-app.Run();
+app.Run();app.Run();
