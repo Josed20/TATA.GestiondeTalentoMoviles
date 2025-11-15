@@ -11,6 +11,7 @@ using TATA.GestiondeTalentoMoviles.CORE.Interfaces;
 using System.Reflection;
 using System.Text;
 using TATA.GestiondeTalentoMoviles.CORE.Services;
+using TATA.GestiondeTalentoMoviles.API.Middleware;
 
 var builder = WebApplication.CreateBuilder(args);
 
@@ -81,11 +82,16 @@ builder.Services.AddAuthorization();
 // Colaboradores
 builder.Services.AddScoped<IColaboradorService, ColaboradorService>();
 builder.Services.AddScoped<IColaboradorRepository, ColaboradorRepository>();
-// Registro del servicio y repositorio de Evaluacion
+
+// Evaluaciones
 builder.Services.AddScoped<IEvaluacionService, EvaluacionService>();
 builder.Services.AddScoped<IEvaluacionRepository, EvaluacionRepository>();
+
+// Solicitudes
 builder.Services.AddScoped<ISolicitudRepository, SolicitudRepository>();
 builder.Services.AddScoped<ISolicitudService, SolicitudService>();
+
+// Recomendaciones
 builder.Services.AddScoped<IRecomendacionRepository, RecomendacionRepository>();
 builder.Services.AddScoped<IRecomendacionService, RecomendacionService>();
 
@@ -105,24 +111,69 @@ builder.Services.AddScoped<IRoleRepository, RoleRepository>();
 builder.Services.AddScoped<IAuthService, AuthService>();
 builder.Services.AddScoped<IUserRepository, UserRepository>();
 
-// --- FIN DE REGISTRO DE SERVICIOS ---
-
-// Registrar vacantes
+// Vacantes
 builder.Services.AddScoped<IVacanteService, VacanteService>();
 builder.Services.AddScoped<IVacanteRepository, VacanteRepository>();
 
-// Servicios existentes de la plantilla
-builder.Services.AddControllers();
+// Areas
+builder.Services.AddScoped<IAreaService, AreaService>();
+builder.Services.AddScoped<IAreaRepository, AreaRepository>();
+
+// --- FIN DE REGISTRO DE SERVICIOS ---
+
+// Configurar Controllers con validación de modelos
+builder.Services.AddControllers()
+    .ConfigureApiBehaviorOptions(options =>
+    {
+        // Personalizar respuesta de validación de modelos
+        options.InvalidModelStateResponseFactory = context =>
+        {
+            var errors = context.ModelState
+                .Where(e => e.Value.Errors.Count > 0)
+                .Select(e => new
+                {
+                    Field = e.Key,
+                    Errors = e.Value.Errors.Select(x => x.ErrorMessage).ToArray()
+                }).ToArray();
+
+            return new Microsoft.AspNetCore.Mvc.BadRequestObjectResult(new
+            {
+                Message = "Error de validación",
+                Errors = errors
+            });
+        };
+    });
+
 builder.Services.AddEndpointsApiExplorer();
-builder.Services.AddOpenApi();
+builder.Services.AddSwaggerGen();
+
+// Configurar CORS para aplicaciones móviles
+builder.Services.AddCors(options =>
+{
+    options.AddPolicy("AllowMobileApp", policy =>
+    {
+        policy.AllowAnyOrigin()
+              .AllowAnyMethod()
+              .AllowAnyHeader();
+    });
+});
 
 // Construir la aplicación
 WebApplication app = builder.Build();
 
+// --- INICIO DE MANEJO GLOBAL DE EXCEPCIONES ---
+// Usar el middleware personalizado de manejo de excepciones
+app.UseMiddleware<ExceptionHandlingMiddleware>();
+// --- FIN DE MANEJO GLOBAL DE EXCEPCIONES ---
+
+// Habilitar CORS
+app.UseCors("AllowMobileApp");
+
 // Configure the HTTP request pipeline.
 if (app.Environment.IsDevelopment())
 {
-    app.MapOpenApi();
+    app.UseSwagger();
+    app.UseSwaggerUI();
 }
 
 //app.UseHttpsRedirection();
@@ -137,6 +188,7 @@ app.UseAuthorization();
 try
 {
     app.MapControllers();
+    Console.WriteLine("✅ Todos los controladores se mapearon correctamente.");
 }
 catch (ReflectionTypeLoadException ex)
 {
@@ -146,7 +198,7 @@ catch (ReflectionTypeLoadException ex)
         // Esto te dirá qué DLL o paquete NuGet está causando el conflicto
         if (loaderEx != null)
         {
-            Console.WriteLine(loaderEx.Message);
+            Console.WriteLine($"❌ {loaderEx.Message}");
         }
     }
     // Lanza la excepción principal para detener la app
@@ -154,4 +206,5 @@ catch (ReflectionTypeLoadException ex)
 }
 // --- FIN DEL BLOQUE DE DEBUG ---
 
-app.Run();app.Run();
+Console.WriteLine("🚀 Aplicación iniciada correctamente.");
+app.Run();
