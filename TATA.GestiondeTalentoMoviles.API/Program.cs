@@ -1,16 +1,26 @@
+using Microsoft.AspNetCore.Authentication.JwtBearer;
+using Microsoft.IdentityModel.Tokens;
 using Microsoft.Extensions.Options;
 using MongoDB.Driver;
-using TATA.GestiondeTalentoMoviles.CORE.Interfaces; // usar el namespace correcto de Interfaces
-using TATA.GestiondeTalentoMoviles.CORE.Services;   // usar el namespace correcto de Services
-using TATA.GestiondeTalentoMoviles.CORE.Core.Settings; // Este ya estaba bien
+using MongoDB.Bson.Serialization.Conventions;
+using TATA.GestiondeTalentoMoviles.CORE.Core.Interfaces;
+using TATA.GestiondeTalentoMoviles.CORE.Core.Services;
+using TATA.GestiondeTalentoMoviles.CORE.Core.Settings;
 using TATA.GestiondeTalentoMoviles.CORE.Infrastructure.Repositories;
-
+using TATA.GestiondeTalentoMoviles.CORE.Interfaces;
+using System.Reflection;
+using System.Text;
+using TATA.GestiondeTalentoMoviles.CORE.Services;
 
 var builder = WebApplication.CreateBuilder(args);
 
-// --- INICIO DE CONFIGURACI覰 DE MONGODB ---
+// Register camelCase convention so BSON keys like 'nombre' map to C# properties 'Nombre'
+var conventionPack = new ConventionPack { new CamelCaseElementNameConvention() };
+ConventionRegistry.Register("camelCase", conventionPack, t => true);
 
-// 1. Cargar la configuraci髇 de appsettings.json
+// --- INICIO DE CONFIGURACI脫N DE MONGODB ---
+
+// 1. Cargar la configuraci贸n de appsettings.json
 builder.Services.Configure<MongoDbSettings>(
     builder.Configuration.GetSection("MongoDbSettings")
 );
@@ -28,21 +38,86 @@ builder.Services.AddScoped<IMongoDatabase>(s =>
     return client.GetDatabase(settings.DatabaseName);
 });
 
-// --- FIN DE CONFIGURACI覰 DE MONGODB ---
+// --- FIN DE CONFIGURACI脫N DE MONGODB ---
 
-// 4. Registrar tus servicios y repositorios
+// --- INICIO DE CONFIGURACI脫N DE JWT ---
+
+// Configurar autenticaci贸n JWT
+builder.Services.AddAuthentication(options =>
+{
+    options.DefaultAuthenticateScheme = JwtBearerDefaults.AuthenticationScheme;
+    options.DefaultChallengeScheme = JwtBearerDefaults.AuthenticationScheme;
+})
+.AddJwtBearer(options =>
+{
+    var jwtKey = builder.Configuration["Jwt:Key"];
+    var jwtIssuer = builder.Configuration["Jwt:Issuer"];
+    var jwtAudience = builder.Configuration["Jwt:Audience"];
+
+    if (string.IsNullOrEmpty(jwtKey) || string.IsNullOrEmpty(jwtIssuer) || string.IsNullOrEmpty(jwtAudience))
+    {
+        throw new InvalidOperationException("La configuraci贸n de JWT no est谩 completa en appsettings.json");
+    }
+
+    options.TokenValidationParameters = new TokenValidationParameters
+    {
+        ValidateIssuer = true,
+        ValidateAudience = true,
+        ValidateLifetime = true,
+        ValidateIssuerSigningKey = true,
+        ValidIssuer = jwtIssuer,
+        ValidAudience = jwtAudience,
+        IssuerSigningKey = new SymmetricSecurityKey(Encoding.UTF8.GetBytes(jwtKey)),
+        ClockSkew = TimeSpan.Zero // Elimina el tiempo de gracia por defecto de 5 minutos
+    };
+});
+
+builder.Services.AddAuthorization();
+
+// --- FIN DE CONFIGURACI脫N DE JWT ---
+
+// --- REGISTRAR SERVICIOS Y REPOSITORIOS ---
+
+// Colaboradores
 builder.Services.AddScoped<IColaboradorService, ColaboradorService>();
 builder.Services.AddScoped<IColaboradorRepository, ColaboradorRepository>();
 // Registro del servicio y repositorio de Evaluacion
 builder.Services.AddScoped<IEvaluacionService, EvaluacionService>();
 builder.Services.AddScoped<IEvaluacionRepository, EvaluacionRepository>();
+builder.Services.AddScoped<ISolicitudRepository, SolicitudRepository>();
+builder.Services.AddScoped<ISolicitudService, SolicitudService>();
+builder.Services.AddScoped<IRecomendacionRepository, RecomendacionRepository>();
+builder.Services.AddScoped<IRecomendacionService, RecomendacionService>();
+
+// Skills
+builder.Services.AddScoped<ISkillService, SkillService>();
+builder.Services.AddScoped<ISkillRepository, SkillRepository>();
+
+// NivelSkills
+builder.Services.AddScoped<INivelSkillService, NivelSkillService>();
+builder.Services.AddScoped<INivelSkillRepository, NivelSkillRepository>();
+
+// Roles
+builder.Services.AddScoped<IRoleService, RoleService>();
+builder.Services.AddScoped<IRoleRepository, RoleRepository>();
+
+// Autenticaci贸n (Auth)
+builder.Services.AddScoped<IAuthService, AuthService>();
+builder.Services.AddScoped<IUserRepository, UserRepository>();
+
+// --- FIN DE REGISTRO DE SERVICIOS ---
+
+// Registrar vacantes
+builder.Services.AddScoped<IVacanteService, VacanteService>();
+builder.Services.AddScoped<IVacanteRepository, VacanteRepository>();
 
 // Servicios existentes de la plantilla
 builder.Services.AddControllers();
 builder.Services.AddEndpointsApiExplorer();
 builder.Services.AddOpenApi();
 
-var app = builder.Build();
+// Construir la aplicaci贸n
+WebApplication app = builder.Build();
 
 // Configure the HTTP request pipeline.
 if (app.Environment.IsDevelopment())
@@ -50,10 +125,33 @@ if (app.Environment.IsDevelopment())
     app.MapOpenApi();
 }
 
-app.UseHttpsRedirection();
+//app.UseHttpsRedirection();
 
+// 隆IMPORTANTE! UseAuthentication debe ir ANTES de UseAuthorization
+app.UseAuthentication();
 app.UseAuthorization();
 
-app.MapControllers();
+// --- INICIO DEL BLOQUE DE DEBUG ---
+// El error ReflectionTypeLoadException sucede aqu铆, cuando .NET
+// intenta escanear todos tus 'Controllers'.
+try
+{
+    app.MapControllers();
+}
+catch (ReflectionTypeLoadException ex)
+{
+    Console.WriteLine("!!! ERROR DE CARGA DE REFLEXI脫N !!!");
+    foreach (var loaderEx in ex.LoaderExceptions)
+    {
+        // Esto te dir谩 qu茅 DLL o paquete NuGet est谩 causando el conflicto
+        if (loaderEx != null)
+        {
+            Console.WriteLine(loaderEx.Message);
+        }
+    }
+    // Lanza la excepci贸n principal para detener la app
+    throw;
+}
+// --- FIN DEL BLOQUE DE DEBUG ---
 
 app.Run();app.Run();

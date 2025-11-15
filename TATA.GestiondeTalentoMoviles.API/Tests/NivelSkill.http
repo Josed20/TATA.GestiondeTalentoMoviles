@@ -1,0 +1,94 @@
+### Variables
+@baseUrl = https://localhost:5001
+@apiUrl = {{baseUrl}}/api/NivelesSkill
+
+### 1. GET ALL - Obtener todos los niveles
+GET {{apiUrl}}
+Accept: application/json
+
+###
+
+### 2. POST - Crear nivel "no iniciado" (código 0)
+POST {{apiUrl}}
+Content-Type: application/json
+
+{
+  "codigo": 0,
+  "nombre": "no iniciado"
+}
+
+###
+
+### 3. POST - Crear nivel "básico" (código 1)
+POST {{apiUrl}}
+Content-Type: application/json
+
+{
+  "codigo": 1,
+  "nombre": "basico"
+}
+
+###
+
+### 4. POST - Crear nivel "intermedio" (código 2)
+POST {{apiUrl}}
+Content-Type: application/json
+
+{
+  "codigo": 2,
+  "nombre": "intermedio"
+}
+
+###
+
+### 5. POST - Crear nivel "avanzado" (código 3)
+POST {{apiUrl}}
+Content-Type: application/json
+
+{
+  "codigo": 3,
+  "nombre": "avanzado"
+}
+
+###
+
+### 6. GET BY ID - Obtener nivel por ObjectId
+# Reemplaza {objectId} con el ID devuelto en el POST
+GET {{apiUrl}}/6736c2b4f2a0455da3041942
+Accept: application/json
+
+###
+
+### 7. PUT - Actualizar nivel existente
+# Reemplaza {objectId} con un ID válido
+PUT {{apiUrl}}/6736c2b4f2a0455da3041942
+Content-Type: application/json
+
+{
+  "codigo": 1,
+  "nombre": "básico actualizado"
+}
+
+###
+
+### 8. PUT - Intentar actualizar nivel no existente (debe devolver 404)
+PUT {{apiUrl}}/000000000000000000000000
+Content-Type: application/json
+
+{
+  "codigo": 99,
+  "nombre": "no existe"
+}
+
+###
+
+### 9. DELETE - Eliminar nivel existente
+# Reemplaza {objectId} con un ID válido
+DELETE {{apiUrl}}/6736c2b4f2a0455da3041942
+
+###
+
+### 10. DELETE - Intentar eliminar nivel no existente (debe devolver 404)
+DELETE {{apiUrl}}/000000000000000000000000
+
+###
