@@ -1,3 +1,8 @@
+using System;
+using MongoDB.Bson;
+using MongoDB.Bson.Serialization.Attributes;
+
+namespace TATA.GestiondeTalentoMoviles.CORE.Entities
 ﻿using System;
 using System.Collections.Generic;
 using MongoDB.Bson;
@@ -12,6 +17,24 @@ namespace TATA.GestiondeTalentoMoviles.CORE.Core.Entities
         public string? Id { get; set; }
 
         [BsonElement("nombre")]
+        public string Nombre { get; set; } = null!;
+
+        [BsonElement("apellido")]
+        public string Apellido { get; set; } = null!;
+
+        [BsonElement("email")]
+        public string Email { get; set; } = null!;
+
+        [BsonElement("createdAt")]
+        public DateTime CreatedAt { get; set; }
+
+        [BsonElement("updatedAt")]
+        public DateTime UpdatedAt { get; set; }
+
+        [BsonElement("estado")]
+        public int Estado { get; set; }
+    }
+}
         public string Nombre { get; set; } = string.Empty;
 
         [BsonElement("apellido")]
