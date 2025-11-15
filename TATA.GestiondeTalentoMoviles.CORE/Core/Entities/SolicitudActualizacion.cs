@@ -15,25 +15,25 @@ namespace TATA.GestiondeTalentoMoviles.CORE.Entities
         public string? Id { get; set; }
 
         [BsonElement("colaboradorId")]
-        public string ColaboradorId { get; set; }
+        public string ColaboradorId { get; set; } = null!;
 
         [BsonElement("skillId")]
-        public string SkillId { get; set; }
+        public string SkillId { get; set; } = null!;
 
         [BsonElement("nuevoNivel")]
-        public string NuevoNivel { get; set; }
+        public string NuevoNivel { get; set; } = null!;
 
         [BsonElement("evidenciaUrl")]
-        public string EvidenciaUrl { get; set; }
+        public string EvidenciaUrl { get; set; } = null!;
 
         [BsonElement("estado")]
-        public string Estado { get; set; }
+        public string Estado { get; set; } = "Pendiente";
 
         [BsonElement("comentariosRRHH")]
-        public string? ComentariosRRHH { get; set; }
+        public string? ComentariosRRHH { get; set; } = null!;
 
         [BsonElement("fechaSolicitud")]
-        public DateTime FechaSolicitud { get; set; }
+        public DateTime FechaSolicitud { get; set; } 
 
         [BsonElement("fechaRevision")]
         public DateTime? FechaRevision { get; set; }
