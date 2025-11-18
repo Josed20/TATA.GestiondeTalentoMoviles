@@ -1,123 +1,142 @@
-using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Threading.Tasks;
+using TATA.GestiondeTalentoMoviles.CORE.Core.Constants;
 using TATA.GestiondeTalentoMoviles.CORE.Core.DTOs;
 using TATA.GestiondeTalentoMoviles.CORE.Core.Entities;
 using TATA.GestiondeTalentoMoviles.CORE.Core.Interfaces;
+using TATA.GestiondeTalentoMoviles.CORE.Core.Interfaces.Repositories;
 
 namespace TATA.GestiondeTalentoMoviles.CORE.Core.Services
 {
     public class UserService : IUserService
     {
-        private readonly IUserRepository _repo;
+        private readonly IUserRepository _userRepository;
 
-        public UserService(IUserRepository repo)
+        public UserService(IUserRepository userRepository)
         {
-            _repo = repo;
+            _userRepository = userRepository;
         }
 
-        public async Task<UserReadDto> CreateAsync(UserCreateDto dto)
+        public async Task<UserViewDto> CreateUserAsync(UserCreateDto userDto)
         {
-            var now = DateTime.UtcNow;
-            var user = new User
+            // 1. Validar que el rol sea válido
+            if (!AppRoles.IsValidRole(userDto.RolSistema))
+                throw new InvalidOperationException($"El rol '{userDto.RolSistema}' no es válido. Roles válidos: {string.Join(", ", AppRoles.GetAllRoles())}");
+
+            // 2. Validar que el usuario no exista
+            var existingUser = await _userRepository.GetByUsernameAsync(userDto.Username);
+            if (existingUser != null)
+                throw new InvalidOperationException("El nombre de usuario ya existe.");
+
+            // 3. Hashear el password (¡NUNCA GUARDAR TEXTO PLANO!)
+            string passwordHash = BCrypt.Net.BCrypt.HashPassword(userDto.Password);
+
+            // 4. Crear la nueva entidad
+            var newUser = new User
             {
-                Nombre = dto.Nombre,
-                Apellido = dto.Apellido,
-                Email = dto.Email,
-                CreatedAt = now,
-                UpdatedAt = now,
-                Estado = dto.Estado
+                Username = userDto.Username,
+                Email = userDto.Email,
+                PasswordHash = passwordHash,
+                RolSistema = userDto.RolSistema,
+                ColaboradorId = userDto.ColaboradorId,
+                FechaCreacion = DateTime.UtcNow,
+                UltimoAcceso = DateTime.UtcNow,
+                IntentosFallidos = 0,
+                BloqueadoHasta = null
             };
 
-            var created = await _repo.CreateAsync(user);
+            // 5. Guardar en BD
+            await _userRepository.CreateAsync(newUser);
 
-            return new UserReadDto
-            {
-                Id = created.Id!,
-                Nombre = created.Nombre,
-                Apellido = created.Apellido,
-                Email = created.Email,
-                CreatedAt = created.CreatedAt,
-                UpdatedAt = created.UpdatedAt,
-                Estado = created.Estado
-            };
+            // 6. Devolver el DTO (sin info sensible)
+            return MapToViewDto(newUser);
         }
 
-        public async Task<bool> DeleteAsync(string id)
+        public async Task<UserViewDto> GetUserByIdAsync(string id)
         {
-            return await _repo.DeleteAsync(id);
+            var user = await _userRepository.GetByIdAsync(id);
+            return user == null ? null : MapToViewDto(user);
         }
 
-        public async Task<IEnumerable<UserReadDto>> GetAllAsync()
+        public async Task<IEnumerable<UserViewDto>> GetAllUsersAsync()
         {
-            var users = await _repo.GetAllAsync();
-            return users.Select(u => new UserReadDto
-            {
-                Id = u.Id!,
-                Nombre = u.Nombre,
-                Apellido = u.Apellido,
-                Email = u.Email,
-                CreatedAt = u.CreatedAt,
-                UpdatedAt = u.UpdatedAt,
-                Estado = u.Estado
-            }).ToList();
+            var users = await _userRepository.GetAllAsync();
+            return users.Select(MapToViewDto);
         }
 
-        public async Task<UserReadDto?> GetByIdAsync(string id)
+        public async Task<UserViewDto> UpdateUserAsync(string id, UserUpdateDto dto)
         {
-            var u = await _repo.GetByIdAsync(id);
-            if (u == null) return null;
-            return new UserReadDto
-            {
-                Id = u.Id!,
-                Nombre = u.Nombre,
-                Apellido = u.Apellido,
-                Email = u.Email,
-                CreatedAt = u.CreatedAt,
-                UpdatedAt = u.UpdatedAt,
-                Estado = u.Estado
-            };
+            // 1. Verificar que el usuario existe
+            var user = await _userRepository.GetByIdAsync(id);
+            if (user == null)
+                throw new InvalidOperationException("Usuario no encontrado.");
+
+            // 2. Validar que el rol sea válido
+            if (!AppRoles.IsValidRole(dto.RolSistema))
+                throw new InvalidOperationException($"El rol '{dto.RolSistema}' no es válido. Roles válidos: {string.Join(", ", AppRoles.GetAllRoles())}");
+
+            // 3. Actualizar campos
+            user.Email = dto.Email;
+            user.RolSistema = dto.RolSistema;
+            user.ColaboradorId = dto.ColaboradorId;
+
+            // 4. Guardar cambios
+            await _userRepository.UpdateAsync(id, user);
+
+            // 5. Devolver el usuario actualizado
+            return MapToViewDto(user);
         }
 
-        public async Task<UserReadDto?> GetByNombreApellidoAsync(string nombre, string apellido)
+        public async Task DeleteUserAsync(string id)
         {
-            var u = await _repo.GetByNombreApellidoAsync(nombre, apellido);
-            if (u == null) return null;
-            return new UserReadDto
-            {
-                Id = u.Id!,
-                Nombre = u.Nombre,
-                Apellido = u.Apellido,
-                Email = u.Email,
-                CreatedAt = u.CreatedAt,
-                UpdatedAt = u.UpdatedAt,
-                Estado = u.Estado
-            };
+            var user = await _userRepository.GetByIdAsync(id);
+            if (user == null)
+                throw new InvalidOperationException("Usuario no encontrado.");
+
+            await _userRepository.DeleteAsync(id);
         }
 
-        public async Task<UserReadDto?> UpdateAsync(string id, UserCreateDto dto)
+        public async Task ResetPasswordAsync(string id, UserResetPasswordDto dto)
         {
-            var existing = await _repo.GetByIdAsync(id);
-            if (existing == null) return null;
-            existing.Nombre = dto.Nombre;
-            existing.Apellido = dto.Apellido;
-            existing.Email = dto.Email;
-            existing.UpdatedAt = DateTime.UtcNow;
-            existing.Estado = dto.Estado;
+            var user = await _userRepository.GetByIdAsync(id);
+            if (user == null)
+                throw new InvalidOperationException("Usuario no encontrado.");
 
-            var updated = await _repo.UpdateAsync(id, existing);
-            if (updated == null) return null;
+            // Hashear la nueva contraseña
+            user.PasswordHash = BCrypt.Net.BCrypt.HashPassword(dto.NewPassword);
 
-            return new UserReadDto
+            // Limpiar bloqueos por si acaso
+            user.IntentosFallidos = 0;
+            user.BloqueadoHasta = null;
+
+            await _userRepository.UpdateAsync(id, user);
+        }
+
+        public async Task UnblockUserAsync(string id)
+        {
+            var user = await _userRepository.GetByIdAsync(id);
+            if (user == null)
+                throw new InvalidOperationException("Usuario no encontrado.");
+
+            // Resetear intentos fallidos y bloqueo
+            user.IntentosFallidos = 0;
+            user.BloqueadoHasta = null;
+
+            await _userRepository.UpdateAsync(id, user);
+        }
+
+        // Helper privado para no exponer la entidad
+        private UserViewDto MapToViewDto(User user)
+        {
+            return new UserViewDto
             {
-                Id = updated.Id!,
-                Nombre = updated.Nombre,
-                Apellido = updated.Apellido,
-                Email = updated.Email,
-                CreatedAt = updated.CreatedAt,
-                UpdatedAt = updated.UpdatedAt,
-                Estado = updated.Estado
+                Id = user.Id,
+                Username = user.Username,
+                Email = user.Email,
+                RolSistema = user.RolSistema,
+                ColaboradorId = user.ColaboradorId,
+                IntentosFallidos = user.IntentosFallidos,
+                BloqueadoHasta = user.BloqueadoHasta,
+                UltimoAcceso = user.UltimoAcceso,
+                FechaCreacion = user.FechaCreacion
             };
         }
     }

@@ -1,0 +1,169 @@
+### ====================================
+### ?? AUTH ENDPOINTS
+### ====================================
+
+@baseUrl = http://localhost:5000
+@token = 
+
+### 1. Login (Admin)
+POST {{baseUrl}}/api/auth/login
+Content-Type: application/json
+
+{
+  "username": "admin",
+  "password": "Admin123456"
+}
+
+### 2. Change Password (Usuario Autenticado)
+POST {{baseUrl}}/api/auth/change-password
+Content-Type: application/json
+Authorization: Bearer {{token}}
+
+{
+  "currentPassword": "Admin123456",
+  "newPassword": "NewPassword123"
+}
+
+### ====================================
+### ?? USERS ENDPOINTS
+### ====================================
+
+@userId = 
+
+### 3. Get All Users (Solo ADMIN)
+GET {{baseUrl}}/api/users
+Authorization: Bearer {{token}}
+
+### 4. Get User By ID (Permite acceso anónimo)
+GET {{baseUrl}}/api/users/{{userId}}
+
+### 5. Create User (Solo ADMIN)
+POST {{baseUrl}}/api/users
+Content-Type: application/json
+Authorization: Bearer {{token}}
+
+{
+  "username": "jperez",
+  "email": "jperez@empresa.com",
+  "password": "Password123",
+  "rolSistema": "COLABORADOR",
+  "colaboradorId": "677e1234567890abcdef1234"
+}
+
+### 6. Create User - Business Manager (Solo ADMIN)
+POST {{baseUrl}}/api/users
+Content-Type: application/json
+Authorization: Bearer {{token}}
+
+{
+  "username": "mgarcia",
+  "email": "mgarcia@empresa.com",
+  "password": "Manager123",
+  "rolSistema": "BUSINESS_MANAGER",
+  "colaboradorId": null
+}
+
+### 7. Update User (Solo ADMIN)
+PUT {{baseUrl}}/api/users/{{userId}}
+Content-Type: application/json
+Authorization: Bearer {{token}}
+
+{
+  "email": "jperez.updated@empresa.com",
+  "rolSistema": "BUSINESS_MANAGER",
+  "colaboradorId": "677e1234567890abcdef1234"
+}
+
+### 8. Reset Password (Solo ADMIN)
+POST {{baseUrl}}/api/users/{{userId}}/reset-password
+Content-Type: application/json
+Authorization: Bearer {{token}}
+
+{
+  "newPassword": "NewTempPassword123"
+}
+
+### 9. Unblock User (Solo ADMIN)
+POST {{baseUrl}}/api/users/{{userId}}/unblock
+Authorization: Bearer {{token}}
+
+### 10. Delete User (Solo ADMIN)
+DELETE {{baseUrl}}/api/users/{{userId}}
+Authorization: Bearer {{token}}
+
+### ====================================
+### ?? PRUEBAS DE VALIDACIÓN
+### ====================================
+
+### 11. Login con credenciales incorrectas (debe fallar)
+POST {{baseUrl}}/api/auth/login
+Content-Type: application/json
+
+{
+  "username": "admin",
+  "password": "wrongpassword"
+}
+
+### 12. Crear usuario con rol inválido (debe fallar)
+POST {{baseUrl}}/api/users
+Content-Type: application/json
+Authorization: Bearer {{token}}
+
+{
+  "username": "testuser",
+  "email": "test@empresa.com",
+  "password": "Test123",
+  "rolSistema": "INVALID_ROLE",
+  "colaboradorId": null
+}
+
+### 13. Crear usuario con email inválido (debe fallar)
+POST {{baseUrl}}/api/users
+Content-Type: application/json
+Authorization: Bearer {{token}}
+
+{
+  "username": "testuser2",
+  "email": "invalid-email",
+  "password": "Test123",
+  "rolSistema": "COLABORADOR",
+  "colaboradorId": null
+}
+
+### 14. Crear usuario con contraseña corta (debe fallar)
+POST {{baseUrl}}/api/users
+Content-Type: application/json
+Authorization: Bearer {{token}}
+
+{
+  "username": "testuser3",
+  "email": "test3@empresa.com",
+  "password": "123",
+  "rolSistema": "COLABORADOR",
+  "colaboradorId": null
+}
+
+### 15. Get All Users sin autenticación (debe fallar)
+GET {{baseUrl}}/api/users
+
+### 16. Change Password con contraseña actual incorrecta (debe fallar)
+POST {{baseUrl}}/api/auth/change-password
+Content-Type: application/json
+Authorization: Bearer {{token}}
+
+{
+  "currentPassword": "wrongpassword",
+  "newPassword": "NewPassword123"
+}
+
+### ====================================
+### ?? INSTRUCCIONES
+### ====================================
+# 
+# 1. Primero ejecuta el endpoint #1 (Login) para obtener el token
+# 2. Copia el token de la respuesta y pégalo en la variable @token arriba
+# 3. Si creas un usuario (#5 o #6), copia su ID y pégalo en @userId
+# 4. Ahora puedes ejecutar los demás endpoints
+# 
+# NOTA: También puedes usar la extensión REST Client de VS Code
+#       que permite guardar automáticamente las respuestas en variables

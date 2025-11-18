@@ -1,16 +1,15 @@
-using System.Collections.Generic;
-using System.Threading.Tasks;
-using TATA.GestiondeTalentoMoviles.CORE.Core.DTOs;
+﻿using TATA.GestiondeTalentoMoviles.CORE.Core.DTOs;
 
 namespace TATA.GestiondeTalentoMoviles.CORE.Core.Interfaces
 {
     public interface IUserService
     {
-        Task<IEnumerable<UserReadDto>> GetAllAsync();
-        Task<UserReadDto?> GetByIdAsync(string id);
-        Task<UserReadDto?> GetByNombreApellidoAsync(string nombre, string apellido);
-        Task<UserReadDto> CreateAsync(UserCreateDto dto);
-        Task<bool> DeleteAsync(string id);
-        Task<UserReadDto?> UpdateAsync(string id, UserCreateDto dto);
+        Task<UserViewDto> CreateUserAsync(UserCreateDto userDto);
+        Task<IEnumerable<UserViewDto>> GetAllUsersAsync();
+        Task<UserViewDto> GetUserByIdAsync(string id);
+        Task<UserViewDto> UpdateUserAsync(string id, UserUpdateDto dto);
+        Task DeleteUserAsync(string id);
+        Task ResetPasswordAsync(string id, UserResetPasswordDto dto);
+        Task UnblockUserAsync(string id);
     }
 }

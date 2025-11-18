@@ -4,7 +4,6 @@ using System;
 using System.Threading.Tasks;
 using TATA.GestiondeTalentoMoviles.CORE.Core.DTOs;
 using TATA.GestiondeTalentoMoviles.CORE.Core.Interfaces;
-using TATA.GestiondeTalentoMoviles.CORE.Interfaces;
 
 namespace TATA.GestiondeTalentoMoviles.API.Controllers
 {
@@ -20,57 +19,21 @@ namespace TATA.GestiondeTalentoMoviles.API.Controllers
         }
 
         /// <summary>
-        /// Registra un nuevo usuario en el sistema
-        /// </summary>
-        [HttpPost("register")]
-        public async Task<IActionResult> Register([FromBody] RegisterRequestDto dto)
-        {
-            try
-            {
-                if (!ModelState.IsValid)
-                {
-                    return BadRequest(ModelState);
-                }
-
-                var response = await _authService.RegisterAsync(dto);
-                return Ok(new
-                {
-                    success = true,
-                    message = "Usuario registrado exitosamente",
-                    data = response
-                });
-            }
-            catch (InvalidOperationException ex)
-            {
-                // Email ya existe
-                return Conflict(new
-                {
-                    success = false,
-                    message = ex.Message
-                });
-            }
-            catch (Exception ex)
-            {
-                return BadRequest(new
-                {
-                    success = false,
-                    message = "Error al registrar usuario",
-                    error = ex.Message
-                });
-            }
-        }
-
-        /// <summary>
         /// Autentica un usuario y devuelve los tokens de acceso
         /// </summary>
         [HttpPost("login")]
-        public async Task<IActionResult> Login([FromBody] LoginRequestDto dto)
+        public async Task<IActionResult> Login([FromBody] AuthRequestDto dto)
         {
             try
             {
                 if (!ModelState.IsValid)
                 {
-                    return BadRequest(ModelState);
+                    return BadRequest(new
+                    {
+                        success = false,
+                        message = "Error de validación",
+                        errors = ModelState
+                    });
                 }
 
                 var response = await _authService.LoginAsync(dto);
@@ -83,7 +46,6 @@ namespace TATA.GestiondeTalentoMoviles.API.Controllers
             }
             catch (UnauthorizedAccessException ex)
             {
-                // Credenciales incorrectas o usuario inactivo
                 return Unauthorized(new
                 {
                     success = false,
@@ -102,38 +64,47 @@ namespace TATA.GestiondeTalentoMoviles.API.Controllers
         }
 
         /// <summary>
-        /// Refresca el token de acceso usando el refresh token
+        /// Cambia la contraseña del usuario autenticado
         /// </summary>
-        [HttpPost("refresh")]
-        public async Task<IActionResult> RefreshToken([FromBody] RefreshTokenRequestDto dto)
+        [HttpPost("change-password")]
+        [Authorize]
+        public async Task<IActionResult> ChangePassword([FromBody] UserChangePasswordDto dto)
         {
             try
             {
                 if (!ModelState.IsValid)
                 {
-                    return BadRequest(ModelState);
+                    return BadRequest(new
+                    {
+                        success = false,
+                        message = "Error de validación",
+                        errors = ModelState
+                    });
                 }
 
-                var response = await _authService.RefreshTokenAsync(dto.RefreshToken);
+                // Obtener el ID del usuario autenticado desde el token JWT
+                var userId = User.FindFirst("uid")?.Value;
+                
+                if (string.IsNullOrEmpty(userId))
+                {
+                    return Unauthorized(new
+                    {
+                        success = false,
+                        message = "No se pudo identificar al usuario autenticado"
+                    });
+                }
+
+                await _authService.ChangePasswordAsync(userId, dto);
+                
                 return Ok(new
                 {
                     success = true,
-                    message = "Token refrescado exitosamente",
-                    data = response
+                    message = "Contraseña actualizada exitosamente"
                 });
             }
             catch (UnauthorizedAccessException ex)
             {
-                // Refresh token inválido o expirado
                 return Unauthorized(new
-                {
-                    success = false,
-                    message = ex.Message
-                });
-            }
-            catch (NotImplementedException ex)
-            {
-                return StatusCode(501, new
                 {
                     success = false,
                     message = ex.Message
@@ -144,7 +115,7 @@ namespace TATA.GestiondeTalentoMoviles.API.Controllers
                 return BadRequest(new
                 {
                     success = false,
-                    message = "Error al refrescar token",
+                    message = "Error al cambiar la contraseña",
                     error = ex.Message
                 });
             }
