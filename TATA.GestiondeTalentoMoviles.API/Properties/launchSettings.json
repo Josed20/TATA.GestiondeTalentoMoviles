@@ -5,11 +5,16 @@
       "commandName": "Project",
       "dotnetRunMessages": true,
       "launchBrowser": false,
-
-      // --- ¡ESTA ES LA LÍNEA CORREGIDA! ---
-      // Ahora escucha en localhost Y en tu IP de Wi-Fi.
-      "applicationUrl": "http://localhost:5260;http://10.72.90.84:5260",
-
+      "applicationUrl": "http://localhost:5260;http://0.0.0.0:5260",
+      "environmentVariables": {
+        "ASPNETCORE_ENVIRONMENT": "Development"
+      }
+    },
+    "https": {
+      "commandName": "Project",
+      "dotnetRunMessages": true,
+      "launchBrowser": false,
+      "applicationUrl": "https://localhost:7260;http://localhost:5260",
       "environmentVariables": {
         "ASPNETCORE_ENVIRONMENT": "Development"
       }
