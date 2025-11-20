@@ -7,6 +7,9 @@ namespace TATA.GestiondeTalentoMoviles.CORE.Core.Interfaces
     {
         Task<CatalogoReadDto?> GetAsync(string id);
         Task<CatalogoReadDto?> GetFirstAsync();
-        Task<CatalogoReadDto> UpdateAsync(string id, CatalogoUpdateDto dto);
+        Task<CatalogoReadDto> UpdateAsync(string seccion, object data);
+        Task<bool> DeleteIndexAsync(string seccion, int index);
+        Task<CatalogoReadDto> CreateSectionAsync(CatalogoCreateSectionDto dto);
+        Task<CatalogoReadDto> AddItemToSectionAsync(string seccion, object item);
     }
 }

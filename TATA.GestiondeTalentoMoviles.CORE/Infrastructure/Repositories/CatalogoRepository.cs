@@ -1,6 +1,7 @@
 using MongoDB.Driver;
 using TATA.GestiondeTalentoMoviles.CORE.Core.Entities;
 using TATA.GestiondeTalentoMoviles.CORE.Core.Interfaces;
+using Newtonsoft.Json;
 
 namespace TATA.GestiondeTalentoMoviles.CORE.Infrastructure.Repositories
 {
@@ -23,5 +24,9 @@ namespace TATA.GestiondeTalentoMoviles.CORE.Infrastructure.Repositories
         {
             await _collection.ReplaceOneAsync(c => c.Id == catalogo.Id, catalogo, new ReplaceOptions { IsUpsert = true });
         }
+
+        // helper para guardar sección dinámica como JSON string
+        public static string SerializeSection(object? data) => JsonConvert.SerializeObject(data ?? new object());
+        public static T? DeserializeSection<T>(string json) => JsonConvert.DeserializeObject<T?>(json);
     }
 }

@@ -16,6 +16,9 @@ namespace TATA.GestiondeTalentoMoviles.CORE.Core.DTOs
         public List<string> RolesLaborales { get; set; } = new();
         public List<NivelSkillDto> NivelesSkill { get; set; } = new();
         public List<string> TiposSkill { get; set; } = new();
+
+        // para secciones adicionales
+        public Dictionary<string, object>? AdditionalSections { get; set; }
     }
 
     public class CatalogoUpdateDto
@@ -24,6 +27,9 @@ namespace TATA.GestiondeTalentoMoviles.CORE.Core.DTOs
         public List<string>? RolesLaborales { get; set; }
         public List<NivelSkillDto>? NivelesSkill { get; set; }
         public List<string>? TiposSkill { get; set; }
+
+        // permitir secciones dinámicas como objeto genérico (serializable)
+        public Dictionary<string, object>? AdditionalSections { get; set; }
     }
 
     public class CatalogoFilterDto
@@ -31,5 +37,14 @@ namespace TATA.GestiondeTalentoMoviles.CORE.Core.DTOs
         // propiedad para solicitar solo una sección
         [Required]
         public string Seccion { get; set; } = null!; // "areas" | "rolesLaborales" | "nivelesSkill" | "tiposSkill"
+    }
+
+    public class CatalogoCreateSectionDto
+    {
+        [Required]
+        public string NombreSeccion { get; set; } = null!;
+
+        [Required]
+        public object Data { get; set; } = null!; // debe ser un array (se validará en servicio)
     }
 }

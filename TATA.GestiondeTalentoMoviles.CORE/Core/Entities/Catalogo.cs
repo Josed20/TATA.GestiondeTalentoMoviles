@@ -17,5 +17,8 @@ namespace TATA.GestiondeTalentoMoviles.CORE.Core.Entities
         public List<string> RolesLaborales { get; set; } = new();
         public List<NivelSkill> NivelesSkill { get; set; } = new();
         public List<string> TiposSkill { get; set; } = new();
+
+        // Secciones dinámicas adicionales (guardadas como JSON raw string del array)
+        public Dictionary<string, string> AdditionalSections { get; set; } = new();
     }
 }
