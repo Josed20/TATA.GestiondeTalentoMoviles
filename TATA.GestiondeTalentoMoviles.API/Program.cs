@@ -39,11 +39,7 @@ builder.Services.AddScoped<IMongoDatabase>(s =>
     return client.GetDatabase(settings.DatabaseName);
 });
 
-// --- FIN DE CONFIGURACIÓN DE MONGODB ---
-
-// --- INICIO DE CONFIGURACIÓN DE JWT ---
-
-// Configurar autenticación JWT
+// Configurar  JWT
 builder.Services.AddAuthentication(options =>
 {
     options.DefaultAuthenticateScheme = JwtBearerDefaults.AuthenticationScheme;
@@ -88,20 +84,13 @@ builder.Services.AddScoped<IEvaluacionService, EvaluacionService>();
 builder.Services.AddScoped<IEvaluacionRepository, EvaluacionRepository>();
 
 // Solicitudes
-builder.Services.AddScoped<ISolicitudRepository, SolicitudRepository>();
+builder.Services.AddScoped<ISolicitudesRepository, SolicitudesRepository>();
 builder.Services.AddScoped<ISolicitudService, SolicitudService>();
 
 // Recomendaciones
 builder.Services.AddScoped<IRecomendacionRepository, RecomendacionRepository>();
 builder.Services.AddScoped<IRecomendacionService, RecomendacionService>();
 
-// Skills
-builder.Services.AddScoped<ISkillService, SkillService>();
-builder.Services.AddScoped<ISkillRepository, SkillRepository>();
-
-// NivelSkills
-builder.Services.AddScoped<INivelSkillService, NivelSkillService>();
-builder.Services.AddScoped<INivelSkillRepository, NivelSkillRepository>();
 
 // Roles
 builder.Services.AddScoped<IRoleService, RoleService>();

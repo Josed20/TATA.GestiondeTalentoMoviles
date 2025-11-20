@@ -4,33 +4,51 @@ using System.Collections.Generic;
 namespace TATA.GestiondeTalentoMoviles.CORE.Core.DTOs
 {
     // ====================================
+    // DTOs para Skills
+    // ====================================
+
+    public class SkillCreateDto
+    {
+        public string Nombre { get; set; } = null!;
+        public string Tipo { get; set; } = null!; // "TECNICO" o "BLANDO"
+        public int Nivel { get; set; } // 1-4
+        public bool EsCritico { get; set; }
+    }
+
+    public class SkillReadDto
+    {
+        public string Nombre { get; set; } = null!;
+        public string Tipo { get; set; } = null!;
+        public int Nivel { get; set; }
+        public bool EsCritico { get; set; }
+    }
+
+    // ====================================
     // DTOs para Certificaciones
     // ====================================
 
     public class CertificacionCreateDto
     {
         public string Nombre { get; set; } = null!;
-        public string? ImagenUrl { get; set; }
+        public string Institucion { get; set; } = null!;
         public DateTime? FechaObtencion { get; set; }
-        // Estado NO se envía, se setea en backend
+        public DateTime? FechaVencimiento { get; set; }
+        public string? ArchivoPdfUrl { get; set; }
+        // Estado y fechas de auditoría NO se envían, se setean en backend
     }
 
     public class CertificacionReadDto
     {
+        public string? CertificacionId { get; set; }
         public string Nombre { get; set; } = null!;
-        public string? ImagenUrl { get; set; }
+        public string Institucion { get; set; } = null!;
         public DateTime? FechaObtencion { get; set; }
+        public DateTime? FechaVencimiento { get; set; }
+        public string? ArchivoPdfUrl { get; set; }
         public string Estado { get; set; } = null!;
-    }
-
-    // ====================================
-    // DTO para Disponibilidad
-    // ====================================
-
-    public class DisponibilidadDto
-    {
-        public string Estado { get; set; } = "Disponible";
-        public int Dias { get; set; }
+        public DateTime? FechaRegistro { get; set; }
+        public DateTime? FechaActualizacion { get; set; }
+        public DateTime? ProximaEvaluacion { get; set; }
     }
 
     // ====================================
@@ -41,40 +59,37 @@ namespace TATA.GestiondeTalentoMoviles.CORE.Core.DTOs
     {
         public string Nombres { get; set; } = null!;
         public string Apellidos { get; set; } = null!;
+        public string Correo { get; set; } = null!;
         public string Area { get; set; } = null!;
-        public string RolActual { get; set; } = null!;
+        public string RolLaboral { get; set; } = null!;
+        public bool DisponibleParaMovilidad { get; set; }
 
-        // Array de ObjectIds de skills
-        public List<string> Skills { get; set; } = new();
+        // Skills embebidos
+        public List<SkillCreateDto> Skills { get; set; } = new();
 
-        // Código del nivel (referencia a nivelskills.codigo)
-        public int? NivelCodigo { get; set; }
-
-        // Array de certificaciones
+        // Certificaciones embebidas
         public List<CertificacionCreateDto> Certificaciones { get; set; } = new();
 
-        // Objeto disponibilidad
-        public DisponibilidadDto Disponibilidad { get; set; } = new();
+        // Estado se setea en backend como "ACTIVO", no incluirlo en el create
     }
 
     public class ColaboradorUpdateDto
     {
         public string Nombres { get; set; } = null!;
         public string Apellidos { get; set; } = null!;
+        public string Correo { get; set; } = null!;
         public string Area { get; set; } = null!;
-        public string RolActual { get; set; } = null!;
+        public string RolLaboral { get; set; } = null!;
+        public bool DisponibleParaMovilidad { get; set; }
 
-        // Array de ObjectIds de skills
-        public List<string> Skills { get; set; } = new();
+        // Opcional: permitir cambiar el estado desde UI (ej. desactivar)
+        public string? Estado { get; set; }
 
-        // Código del nivel
-        public int? NivelCodigo { get; set; }
+        // Skills embebidos
+        public List<SkillCreateDto> Skills { get; set; } = new();
 
-        // Array de certificaciones
+        // Certificaciones embebidas
         public List<CertificacionCreateDto> Certificaciones { get; set; } = new();
-
-        // Objeto disponibilidad
-        public DisponibilidadDto Disponibilidad { get; set; } = new();
     }
 
     public class ColaboradorReadDto
@@ -82,19 +97,20 @@ namespace TATA.GestiondeTalentoMoviles.CORE.Core.DTOs
         public string Id { get; set; } = null!;
         public string Nombres { get; set; } = null!;
         public string Apellidos { get; set; } = null!;
+        public string Correo { get; set; } = null!;
         public string Area { get; set; } = null!;
-        public string RolActual { get; set; } = null!;
+        public string RolLaboral { get; set; } = null!;
+        public string Estado { get; set; } = null!;
+        public bool DisponibleParaMovilidad { get; set; }
 
-        // Array de ObjectIds de skills
-        public List<string> Skills { get; set; } = new();
+        // Skills embebidos
+        public List<SkillReadDto> Skills { get; set; } = new();
 
-        // Código del nivel
-        public int? NivelCodigo { get; set; }
-
-        // Array de certificaciones con estado
+        // Certificaciones embebidas
         public List<CertificacionReadDto> Certificaciones { get; set; } = new();
 
-        // Objeto disponibilidad
-        public DisponibilidadDto Disponibilidad { get; set; } = new();
+        // Auditoría
+        public DateTime? FechaRegistro { get; set; }
+        public DateTime? FechaActualizacion { get; set; }
     }
 }

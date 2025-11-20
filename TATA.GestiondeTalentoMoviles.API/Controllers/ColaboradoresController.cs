@@ -17,8 +17,10 @@ namespace TATA.GestiondeTalentoMoviles.API.Controllers
 
         /// <summary>
         /// Obtiene todos los colaboradores
-        /// </summary>  Resumen
+        /// </summary>
+        /// <returns>Lista de todos los colaboradores</returns>
         [HttpGet]
+        [ProducesResponseType(typeof(IEnumerable<ColaboradorReadDto>), StatusCodes.Status200OK)]
         public async Task<IActionResult> GetAll()
         {
             var colaboradores = await _service.GetAllAsync();
@@ -28,7 +30,11 @@ namespace TATA.GestiondeTalentoMoviles.API.Controllers
         /// <summary>
         /// Obtiene un colaborador por su ID
         /// </summary>
+        /// <param name="id">ID del colaborador</param>
+        /// <returns>Datos del colaborador</returns>
         [HttpGet("{id}")]
+        [ProducesResponseType(typeof(ColaboradorReadDto), StatusCodes.Status200OK)]
+        [ProducesResponseType(StatusCodes.Status404NotFound)]
         public async Task<IActionResult> GetById(string id)
         {
             var colaborador = await _service.GetByIdAsync(id);
@@ -42,7 +48,11 @@ namespace TATA.GestiondeTalentoMoviles.API.Controllers
         /// <summary>
         /// Crea un nuevo colaborador
         /// </summary>
+        /// <param name="createDto">Datos del nuevo colaborador</param>
+        /// <returns>Colaborador creado con su ID asignado</returns>
         [HttpPost]
+        [ProducesResponseType(typeof(ColaboradorReadDto), StatusCodes.Status201Created)]
+        [ProducesResponseType(StatusCodes.Status400BadRequest)]
         public async Task<IActionResult> Create([FromBody] ColaboradorCreateDto createDto)
         {
             if (!ModelState.IsValid)
@@ -57,7 +67,13 @@ namespace TATA.GestiondeTalentoMoviles.API.Controllers
         /// <summary>
         /// Actualiza un colaborador existente por su ID
         /// </summary>
+        /// <param name="id">ID del colaborador a actualizar</param>
+        /// <param name="updateDto">Datos actualizados del colaborador</param>
+        /// <returns>Colaborador actualizado</returns>
         [HttpPut("{id}")]
+        [ProducesResponseType(typeof(ColaboradorReadDto), StatusCodes.Status200OK)]
+        [ProducesResponseType(StatusCodes.Status400BadRequest)]
+        [ProducesResponseType(StatusCodes.Status404NotFound)]
         public async Task<IActionResult> Update(string id, [FromBody] ColaboradorUpdateDto updateDto)
         {
             if (!ModelState.IsValid)
@@ -75,9 +91,13 @@ namespace TATA.GestiondeTalentoMoviles.API.Controllers
         }
 
         /// <summary>
-        /// Elimina (marca como inactivo) un colaborador por su ID
+        /// Elimina lógicamente un colaborador (marca como INACTIVO)
         /// </summary>
+        /// <param name="id">ID del colaborador a eliminar</param>
+        /// <returns>No content si se elimina correctamente</returns>
         [HttpDelete("{id}")]
+        [ProducesResponseType(StatusCodes.Status204NoContent)]
+        [ProducesResponseType(StatusCodes.Status404NotFound)]
         public async Task<IActionResult> Delete(string id)
         {
             var eliminado = await _service.DeleteAsync(id);

@@ -1,4 +1,5 @@
-﻿using System.Collections.Generic;
+﻿using System;
+using System.Collections.Generic;
 using System.Threading.Tasks;
 using MongoDB.Driver;
 using TATA.GestiondeTalentoMoviles.CORE.Core.Interfaces;
@@ -19,17 +20,32 @@ namespace TATA.GestiondeTalentoMoviles.CORE.Infrastructure.Repositories
         public async Task<Colaborador> CreateAsync(Colaborador colaborador)
         {
             // ✅ No establecer Id, dejar que MongoDB lo genere automáticamente
+            
+            // Establecer fechas de auditoría
+            colaborador.FechaRegistro = DateTime.UtcNow;
+            colaborador.FechaActualizacion = DateTime.UtcNow;
+            
+            // Si el estado viene vacío, establecer "ACTIVO"
+            if (string.IsNullOrWhiteSpace(colaborador.Estado))
+            {
+                colaborador.Estado = "ACTIVO";
+            }
+            
             await _colaboradores.InsertOneAsync(colaborador);
             return colaborador; // MongoDB habrá asignado el Id automáticamente
         }
 
         public async Task<IEnumerable<Colaborador>> GetAllAsync()
         {
-            return await _colaboradores.Find(_ => true).ToListAsync();
+            // ✅ Devolver TODOS los colaboradores sin filtrar por estado (incluye ACTIVO e INACTIVO)
+            return await _colaboradores
+                .Find(_ => true)
+                .ToListAsync();
         }
 
         public async Task<Colaborador?> GetByIdAsync(string id)
         {
+            // ✅ Buscar por Id SIN filtrar por estado (puede ser ACTIVO o INACTIVO)
             return await _colaboradores
                 .Find(c => c.Id == id)
                 .FirstOrDefaultAsync();
@@ -39,6 +55,9 @@ namespace TATA.GestiondeTalentoMoviles.CORE.Infrastructure.Repositories
         {
             // ✅ Asegurar que el Id del documento coincida con el que se está actualizando
             colaborador.Id = id;
+            
+            // Actualizar fecha de modificación
+            colaborador.FechaActualizacion = DateTime.UtcNow;
 
             var result = await _colaboradores.ReplaceOneAsync(
                 c => c.Id == id,
@@ -51,9 +70,10 @@ namespace TATA.GestiondeTalentoMoviles.CORE.Infrastructure.Repositories
 
         public async Task<bool> DeleteAsync(string id)
         {
-            // ✅ Borrado lógico: marcar disponibilidad como "Inactivo"
+            // ✅ Borrado lógico: marcar Estado como "INACTIVO"
             var update = Builders<Colaborador>.Update
-                .Set(c => c.Disponibilidad.Estado, "Inactivo");
+                .Set(c => c.Estado, "INACTIVO")
+                .Set(c => c.FechaActualizacion, DateTime.UtcNow);
 
             var result = await _colaboradores.UpdateOneAsync(
                 c => c.Id == id,
