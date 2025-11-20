@@ -1,15 +1,16 @@
 ﻿using System.Collections.Generic;
 using System.Threading.Tasks;
-using TATA.GestiondeTalentoMoviles.CORE.Core.DTOs;
+using TATA.GestiondeTalentoMoviles.CORE.Entities;
 
 namespace TATA.GestiondeTalentoMoviles.CORE.Interfaces
 {
     public interface IEvaluacionService
     {
-        Task<EvaluacionReadDto> CreateAsync(EvaluacionCreateDto createDto);
-        Task<bool> DeleteAsync(string id);
-        Task<IEnumerable<EvaluacionReadDto>> GetAllAsync();
-        Task<EvaluacionReadDto?> GetByIdAsync(string id);
-        Task<EvaluacionReadDto?> UpdateAsync(string id, EvaluacionCreateDto updateDto);
+        Task<IEnumerable<Evaluacion>> GetAllAsync();
+        Task<Evaluacion?> GetByIdAsync(string id);
+        Task<IEnumerable<Evaluacion>> GetByColaboradorAsync(string colaboradorId);
+        Task AddAsync(Evaluacion evaluacion);
+        Task UpdateAsync(Evaluacion evaluacion);
+        Task DeleteAsync(string id);
     }
 }

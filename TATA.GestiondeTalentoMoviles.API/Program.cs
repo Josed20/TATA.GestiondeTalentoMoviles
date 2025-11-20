@@ -6,7 +6,7 @@ using MongoDB.Bson.Serialization.Conventions;
 using TATA.GestiondeTalentoMoviles.CORE.Core.Interfaces;
 using TATA.GestiondeTalentoMoviles.CORE.Core.Services;
 using TATA.GestiondeTalentoMoviles.CORE.Core.Settings;
-using TATA.GestiondeTalentoMoviles.CORE.Infrastructure.Repositories;
+using TATA.GestiondeTalentoMoviles.INFRASTRUCTURE.Repositories;
 using TATA.GestiondeTalentoMoviles.CORE.Interfaces;
 using System.Reflection;
 using System.Text;
@@ -79,45 +79,13 @@ builder.Services.AddAuthorization();
 
 // --- REGISTRAR SERVICIOS Y REPOSITORIOS ---
 
-// Colaboradores
-builder.Services.AddScoped<IColaboradorService, ColaboradorService>();
-builder.Services.AddScoped<IColaboradorRepository, ColaboradorRepository>();
-
 // Evaluaciones
 builder.Services.AddScoped<IEvaluacionService, EvaluacionService>();
-builder.Services.AddScoped<IEvaluacionRepository, EvaluacionRepository>();
+builder.Services.AddScoped<IEvaluacionRepository, EvaluacionesRepository>();
 
-// Solicitudes
-builder.Services.AddScoped<ISolicitudRepository, SolicitudRepository>();
-builder.Services.AddScoped<ISolicitudService, SolicitudService>();
-
-// Recomendaciones
-builder.Services.AddScoped<IRecomendacionRepository, RecomendacionRepository>();
-builder.Services.AddScoped<IRecomendacionService, RecomendacionService>();
-
-// Skills
-builder.Services.AddScoped<ISkillService, SkillService>();
-builder.Services.AddScoped<ISkillRepository, SkillRepository>();
-
-// NivelSkills
-builder.Services.AddScoped<INivelSkillService, NivelSkillService>();
-builder.Services.AddScoped<INivelSkillRepository, NivelSkillRepository>();
-
-// Roles
-builder.Services.AddScoped<IRoleService, RoleService>();
-builder.Services.AddScoped<IRoleRepository, RoleRepository>();
-
-// Autenticación (Auth)
-builder.Services.AddScoped<IAuthService, AuthService>();
-builder.Services.AddScoped<IUserRepository, UserRepository>();
-
-// Vacantes
-builder.Services.AddScoped<IVacanteService, VacanteService>();
-builder.Services.AddScoped<IVacanteRepository, VacanteRepository>();
-
-// Areas
-builder.Services.AddScoped<IAreaService, AreaService>();
-builder.Services.AddScoped<IAreaRepository, AreaRepository>();
+// EvaluacionesII
+builder.Services.AddScoped<IEvaluacionesIIService, EvaluacionesIIService>();
+builder.Services.AddScoped<IEvaluacionesIIRepository, EvaluacionesIIRepository>();
 
 // --- FIN DE REGISTRO DE SERVICIOS ---
 
@@ -129,11 +97,11 @@ builder.Services.AddControllers()
         options.InvalidModelStateResponseFactory = context =>
         {
             var errors = context.ModelState
-                .Where(e => e.Value.Errors.Count > 0)
+                .Where(e => e.Value?.Errors.Count > 0)
                 .Select(e => new
                 {
                     Field = e.Key,
-                    Errors = e.Value.Errors.Select(x => x.ErrorMessage).ToArray()
+                    Errors = e.Value!.Errors.Select(x => x.ErrorMessage).ToArray()
                 }).ToArray();
 
             return new Microsoft.AspNetCore.Mvc.BadRequestObjectResult(new
