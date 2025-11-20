@@ -38,6 +38,21 @@ namespace TATA.GestiondeTalentoMoviles.API.Controllers
             return Ok(new { success = true, data = item });
         }
 
+        [HttpGet("vacante/{vacanteId}")]
+        public async Task<IActionResult> GetByVacanteId(string vacanteId)
+        {
+            var list = await _service.GetByVacanteIdAsync(vacanteId);
+            return Ok(new { success = true, data = list });
+        }
+
+        [HttpGet("fechaCreacion")]
+        public async Task<IActionResult> GetByFechaCreacion([FromQuery] DateTime fecha)
+        {
+            // fecha esperada en formato ISO yyyy-MM-dd o con hora completa; el repo buscará por fecha UTC
+            var list = await _service.GetByFechaCreacionAsync(fecha);
+            return Ok(new { success = true, data = list });
+        }
+
         [HttpPost]
         public async Task<IActionResult> Create([FromBody] ProcesosMatchingCreateDto dto)
         {

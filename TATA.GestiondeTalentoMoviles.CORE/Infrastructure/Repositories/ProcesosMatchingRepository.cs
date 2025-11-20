@@ -29,5 +29,18 @@ namespace TATA.GestiondeTalentoMoviles.CORE.Infrastructure.Repositories
 
         public async Task UpdateAsync(string id, ProcesosMatching procesoIn) =>
             await _collection.ReplaceOneAsync(p => p.Id == id, procesoIn);
+
+        public async Task<IEnumerable<ProcesosMatching>> GetByVacanteIdAsync(string vacanteId) =>
+            await _collection.Find(p => p.VacanteId == vacanteId).ToListAsync();
+
+        public async Task<IEnumerable<ProcesosMatching>> GetByFechaCreacionAsync(System.DateTime fechaCreacion)
+        {
+            // Buscar por la misma fecha (ignorando hora) en UTC
+            var start = fechaCreacion.Date.ToUniversalTime();
+            var end = start.AddDays(1);
+            var filter = Builders<ProcesosMatching>.Filter.Gte(p => p.FechaCreacion, start) &
+                         Builders<ProcesosMatching>.Filter.Lt(p => p.FechaCreacion, end);
+            return await _collection.Find(filter).ToListAsync();
+        }
     }
 }
