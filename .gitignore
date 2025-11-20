@@ -361,3 +361,4 @@ MigrationBackup/
 
 # Fody - auto-generated XML schema
 FodyWeavers.xsd
+/DOCUMENTACION_SOLICITUDES_VALIDACIONES.md

@@ -3,6 +3,7 @@ using Microsoft.Extensions.Options;
 using Microsoft.IdentityModel.Tokens;
 using MongoDB.Bson.Serialization.Conventions;
 using MongoDB.Driver;
+using System.Reflection;
 using System.Text;
 using TATA.GestiondeTalentoMoviles.API.Middleware;
 using TATA.GestiondeTalentoMoviles.CORE.Core.Interfaces;
@@ -10,6 +11,7 @@ using TATA.GestiondeTalentoMoviles.CORE.Core.Interfaces.Repositories;
 using TATA.GestiondeTalentoMoviles.CORE.Core.Services;
 using TATA.GestiondeTalentoMoviles.CORE.Core.Settings;
 using TATA.GestiondeTalentoMoviles.CORE.Infrastructure.Repositories;
+using TATA.GestiondeTalentoMoviles.CORE.Services;
 using Microsoft.OpenApi.Models;
 
 var builder = WebApplication.CreateBuilder(args);
@@ -82,13 +84,25 @@ builder.Services.AddTransient<IAuthService, AuthService>();
 // Usuarios
 builder.Services.AddTransient<IUserService, UserService>();
 builder.Services.AddTransient<IUserRepository, UserRepository>();
-//Alertas
+
+// Colaboradores
+builder.Services.AddScoped<IColaboradorService, ColaboradorService>();
+builder.Services.AddScoped<IColaboradorRepository, ColaboradorRepository>();
+
+// Solicitudes
+builder.Services.AddScoped<ISolicitudesRepository, SolicitudesRepository>();
+builder.Services.AddScoped<ISolicitudService, SolicitudService>();
+
+
+// Alertas
 builder.Services.AddScoped<IAlertaRepository, AlertaRepository>();
 builder.Services.AddScoped<IAlertaService, AlertaService>();
 
 // Procesos Matching
 builder.Services.AddTransient<IProcesosMatchingService, ProcesosMatchingService>();
 builder.Services.AddTransient<IProcesosMatchingRepository, ProcesosMatchingRepository>();
+
+// --- FIN DE REGISTRO DE SERVICIOS ---
 
 // Configurar Controllers con validación de modelos
 builder.Services.AddControllers()
@@ -114,6 +128,7 @@ builder.Services.AddControllers()
     });
 
 builder.Services.AddEndpointsApiExplorer();
+
 // Configure Swagger to support JWT Bearer authentication (HTTP bearer)
 builder.Services.AddSwaggerGen(c =>
 {
