@@ -7,7 +7,6 @@ using TATA.GestiondeTalentoMoviles.CORE.Core.Interfaces;
 using TATA.GestiondeTalentoMoviles.CORE.Core.Services;
 using TATA.GestiondeTalentoMoviles.CORE.Core.Settings;
 using TATA.GestiondeTalentoMoviles.CORE.Infrastructure.Repositories;
-using TATA.GestiondeTalentoMoviles.CORE.Interfaces;
 using System.Reflection;
 using System.Text;
 using TATA.GestiondeTalentoMoviles.CORE.Services;
@@ -79,34 +78,10 @@ builder.Services.AddAuthorization();
 builder.Services.AddScoped<IColaboradorService, ColaboradorService>();
 builder.Services.AddScoped<IColaboradorRepository, ColaboradorRepository>();
 
-// Evaluaciones
-builder.Services.AddScoped<IEvaluacionService, EvaluacionService>();
-builder.Services.AddScoped<IEvaluacionRepository, EvaluacionRepository>();
-
 // Solicitudes
 builder.Services.AddScoped<ISolicitudesRepository, SolicitudesRepository>();
 builder.Services.AddScoped<ISolicitudService, SolicitudService>();
 
-// Recomendaciones
-builder.Services.AddScoped<IRecomendacionRepository, RecomendacionRepository>();
-builder.Services.AddScoped<IRecomendacionService, RecomendacionService>();
-
-
-// Roles
-builder.Services.AddScoped<IRoleService, RoleService>();
-builder.Services.AddScoped<IRoleRepository, RoleRepository>();
-
-// Autenticación (Auth)
-builder.Services.AddScoped<IAuthService, AuthService>();
-builder.Services.AddScoped<IUserRepository, UserRepository>();
-
-// Vacantes
-builder.Services.AddScoped<IVacanteService, VacanteService>();
-builder.Services.AddScoped<IVacanteRepository, VacanteRepository>();
-
-// Areas
-builder.Services.AddScoped<IAreaService, AreaService>();
-builder.Services.AddScoped<IAreaRepository, AreaRepository>();
 
 // --- FIN DE REGISTRO DE SERVICIOS ---
 
