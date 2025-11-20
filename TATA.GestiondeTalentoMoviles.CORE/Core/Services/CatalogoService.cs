@@ -1,4 +1,6 @@
 using System.Linq;
+using System.Reflection;
+using System.Collections;
 using Newtonsoft.Json;
 using TATA.GestiondeTalentoMoviles.CORE.Core.DTOs;
 using TATA.GestiondeTalentoMoviles.CORE.Core.Entities;
@@ -29,6 +31,26 @@ namespace TATA.GestiondeTalentoMoviles.CORE.Core.Services
             return Map(c);
         }
 
+        // helper: try find a native property on Catalogo that matches the provided section name
+        private static PropertyInfo? FindNativeProperty(string seccion)
+        {
+            var key = seccion.ToLowerInvariant();
+            var props = typeof(Catalogo).GetProperties(BindingFlags.Public | BindingFlags.Instance);
+            // 1) exact match
+            var exact = props.FirstOrDefault(p => string.Equals(p.Name, seccion, System.StringComparison.OrdinalIgnoreCase));
+            if (exact != null) return exact;
+
+            // 2) contains match (so 'roles' matches 'RolesLaborales', 'niveles' matches 'NivelesSkill')
+            var contains = props.FirstOrDefault(p => p.Name.ToLowerInvariant().Contains(key));
+            if (contains != null) return contains;
+
+            // 3) reverse contains (seccion contains property name)
+            var rev = props.FirstOrDefault(p => key.Contains(p.Name.ToLowerInvariant()));
+            if (rev != null) return rev;
+
+            return null;
+        }
+
         public async Task<CatalogoReadDto> UpdateAsync(string seccion, object data)
         {
             // Obtener catalogo global
@@ -41,22 +63,23 @@ namespace TATA.GestiondeTalentoMoviles.CORE.Core.Services
 
             var key = seccion.ToLowerInvariant();
 
-            // áreas y roles (arrays de strings)
-            if (key == "areas")
+            // Intentar resolver propiedad nativa mediante reflexión
+            var prop = FindNativeProperty(seccion);
+            if (prop != null && typeof(IEnumerable).IsAssignableFrom(prop.PropertyType))
             {
-                catalogo.Areas = JsonConvert.DeserializeObject<List<string>>(JsonConvert.SerializeObject(data)) ?? new();
-            }
-            else if (key == "roles" || key == "roleslaborales")
-            {
-                catalogo.RolesLaborales = JsonConvert.DeserializeObject<List<string>>(JsonConvert.SerializeObject(data)) ?? new();
-            }
-            else if (key == "niveles" || key == "nivelesskill" || key == "nivelesskills")
-            {
-                catalogo.NivelesSkill = JsonConvert.DeserializeObject<List<NivelSkill>>(JsonConvert.SerializeObject(data)) ?? new();
-            }
-            else if (key == "tipos" || key == "tiposskill" || key == "tiposs")
-            {
-                catalogo.TiposSkill = JsonConvert.DeserializeObject<List<string>>(JsonConvert.SerializeObject(data)) ?? new();
+                // Deserializar directamente al tipo de la propiedad (p. ej. List<string> o List<NivelSkill>)
+                var json = JsonConvert.SerializeObject(data);
+                var deserialized = JsonConvert.DeserializeObject(json, prop.PropertyType);
+                if (deserialized != null)
+                {
+                    prop.SetValue(catalogo, deserialized);
+                }
+                else
+                {
+                    // si la deserialización falla, aseguramos lista vacía compatible
+                    var empty = Activator.CreateInstance(prop.PropertyType);
+                    prop.SetValue(catalogo, empty);
+                }
             }
             else
             {
@@ -79,25 +102,13 @@ namespace TATA.GestiondeTalentoMoviles.CORE.Core.Services
 
             try
             {
-                if (key == "areas")
+                var prop = FindNativeProperty(seccion);
+                if (prop != null && typeof(IList).IsAssignableFrom(prop.PropertyType))
                 {
-                    if (index < 0 || index >= catalogo.Areas.Count) return false;
-                    catalogo.Areas.RemoveAt(index);
-                }
-                else if (key == "roles" || key == "roleslaborales")
-                {
-                    if (index < 0 || index >= catalogo.RolesLaborales.Count) return false;
-                    catalogo.RolesLaborales.RemoveAt(index);
-                }
-                else if (key == "niveles" || key == "nivelesskill" || key == "nivelesskills")
-                {
-                    if (index < 0 || index >= catalogo.NivelesSkill.Count) return false;
-                    catalogo.NivelesSkill.RemoveAt(index);
-                }
-                else if (key == "tipos" || key == "tiposskill" || key == "tiposs")
-                {
-                    if (index < 0 || index >= catalogo.TiposSkill.Count) return false;
-                    catalogo.TiposSkill.RemoveAt(index);
+                    var list = prop.GetValue(catalogo) as IList;
+                    if (list == null) return false;
+                    if (index < 0 || index >= list.Count) return false;
+                    list.RemoveAt(index);
                 }
                 else
                 {
@@ -126,9 +137,11 @@ namespace TATA.GestiondeTalentoMoviles.CORE.Core.Services
             }
 
             var key = dto.NombreSeccion.ToLowerInvariant();
-            if (key == "areas" || key == "roleslaborales" || key == "roles" || key == "niveles" || key == "nivelesskill" || key == "nivelesskills" || key == "tipos" || key == "tiposskill" || key == "tiposs")
+
+            // Si existe una propiedad nativa que coincida, no permitir creación
+            var prop = FindNativeProperty(dto.NombreSeccion);
+            if (prop != null)
             {
-                // no permitir crear sobre secciones fijas
                 throw new InvalidOperationException("No se puede crear una sección que ya existe como sección nativa");
             }
 
@@ -148,26 +161,31 @@ namespace TATA.GestiondeTalentoMoviles.CORE.Core.Services
                 catalogo = new Catalogo { Id = "catalogos_globales" };
 
             var key = seccion.ToLowerInvariant();
+            var prop = FindNativeProperty(seccion);
 
-            if (key == "areas")
+            if (prop != null && typeof(IList).IsAssignableFrom(prop.PropertyType))
             {
-                var val = JsonConvert.DeserializeObject<string>(JsonConvert.SerializeObject(item));
-                if (val != null) catalogo.Areas.Add(val);
-            }
-            else if (key == "roles" || key == "roleslaborales")
-            {
-                var val = JsonConvert.DeserializeObject<string>(JsonConvert.SerializeObject(item));
-                if (val != null) catalogo.RolesLaborales.Add(val);
-            }
-            else if (key == "niveles" || key == "nivelesskill" || key == "nivelesskills")
-            {
-                var val = JsonConvert.DeserializeObject<NivelSkill>(JsonConvert.SerializeObject(item));
-                if (val != null) catalogo.NivelesSkill.Add(val);
-            }
-            else if (key == "tipos" || key == "tiposskill" || key == "tiposs")
-            {
-                var val = JsonConvert.DeserializeObject<string>(JsonConvert.SerializeObject(item));
-                if (val != null) catalogo.TiposSkill.Add(val);
+                // obtener la lista existente (o crear una nueva si null)
+                var list = prop.GetValue(catalogo) as IList;
+                if (list == null)
+                {
+                    var instance = Activator.CreateInstance(prop.PropertyType) as IList;
+                    if (instance == null)
+                    {
+                        throw new InvalidOperationException("La sección nativa no es una lista manipulable");
+                    }
+                    prop.SetValue(catalogo, instance);
+                    list = instance;
+                }
+
+                // Deserializar el item al tipo de elemento de la lista
+                var elementType = prop.PropertyType.IsGenericType ? prop.PropertyType.GetGenericArguments()[0] : typeof(object);
+                var jsonItem = JsonConvert.SerializeObject(item);
+                var deserializedItem = JsonConvert.DeserializeObject(jsonItem, elementType);
+                if (deserializedItem != null)
+                {
+                    list.Add(deserializedItem);
+                }
             }
             else
             {
