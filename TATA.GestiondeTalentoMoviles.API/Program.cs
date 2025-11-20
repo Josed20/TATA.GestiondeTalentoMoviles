@@ -10,6 +10,7 @@ using TATA.GestiondeTalentoMoviles.CORE.Core.Interfaces.Repositories;
 using TATA.GestiondeTalentoMoviles.CORE.Core.Services;
 using TATA.GestiondeTalentoMoviles.CORE.Core.Settings;
 using TATA.GestiondeTalentoMoviles.CORE.Infrastructure.Repositories;
+using Microsoft.OpenApi.Models;
 
 var builder = WebApplication.CreateBuilder(args);
 
@@ -82,6 +83,10 @@ builder.Services.AddTransient<IAuthService, AuthService>();
 builder.Services.AddTransient<IUserService, UserService>();
 builder.Services.AddTransient<IUserRepository, UserRepository>();
 
+// Procesos Matching
+builder.Services.AddTransient<IProcesosMatchingService, ProcesosMatchingService>();
+builder.Services.AddTransient<IProcesosMatchingRepository, ProcesosMatchingRepository>();
+
 // Configurar Controllers con validación de modelos
 builder.Services.AddControllers()
     .ConfigureApiBehaviorOptions(options =>
@@ -106,7 +111,31 @@ builder.Services.AddControllers()
     });
 
 builder.Services.AddEndpointsApiExplorer();
-builder.Services.AddSwaggerGen();
+// Configure Swagger to support JWT Bearer authentication (HTTP bearer)
+builder.Services.AddSwaggerGen(c =>
+{
+    var securityScheme = new OpenApiSecurityScheme
+    {
+        Name = "Authorization",
+        Description = "Ingrese el token JWT con el prefijo 'Bearer '. Ejemplo: 'Bearer {token}'",
+        In = ParameterLocation.Header,
+        Type = SecuritySchemeType.Http,
+        Scheme = "bearer",
+        BearerFormat = "JWT",
+        Reference = new OpenApiReference
+        {
+            Type = ReferenceType.SecurityScheme,
+            Id = "Bearer"
+        }
+    };
+
+    c.AddSecurityDefinition("Bearer", securityScheme);
+
+    c.AddSecurityRequirement(new OpenApiSecurityRequirement
+    {
+        { securityScheme, new string[] { } }
+    });
+});
 
 // Configurar CORS
 builder.Services.AddCors(options =>

@@ -96,13 +96,16 @@ namespace TATA.GestiondeTalentoMoviles.CORE.Core.Services
             var credentials = new SigningCredentials(securityKey, SecurityAlgorithms.HmacSha256);
 
             // Tus "Claims" son la info dentro del token
-            var claims = new[]
+            var claims = new List<Claim>
             {
                 new Claim(JwtRegisteredClaimNames.Sub, user.Username),
                 new Claim(JwtRegisteredClaimNames.Email, user.Email),
-                new Claim(ClaimTypes.Role, user.RolSistema),
+                new Claim(ClaimTypes.Role, user.RolSistema ?? string.Empty),
+                // Add also 'role' and 'roles' claims to be compatible with different consumers
+                new Claim("role", user.RolSistema ?? string.Empty),
+                new Claim("roles", user.RolSistema ?? string.Empty),
                 new Claim("uid", user.Id),
-                new Claim("cid", user.ColaboradorId ?? ""),
+                new Claim("cid", user.ColaboradorId ?? string.Empty),
                 new Claim(JwtRegisteredClaimNames.Jti, Guid.NewGuid().ToString())
             };
 
