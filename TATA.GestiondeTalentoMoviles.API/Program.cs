@@ -102,6 +102,10 @@ builder.Services.AddScoped<IAlertaService, AlertaService>();
 builder.Services.AddTransient<IProcesosMatchingService, ProcesosMatchingService>();
 builder.Services.AddTransient<IProcesosMatchingRepository, ProcesosMatchingRepository>();
 
+// Catalogo (nuevo)
+builder.Services.AddScoped<ICatalogoRepository, CatalogoRepository>();
+builder.Services.AddScoped<ICatalogoService, CatalogoService>();
+
 // --- FIN DE REGISTRO DE SERVICIOS ---
 
 // Configurar Controllers con validación de modelos
