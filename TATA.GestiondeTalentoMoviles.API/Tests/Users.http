@@ -1,0 +1,173 @@
+### ================================
+### API de Usuarios y Autenticación
+### ================================
+
+@baseUrl = http://localhost:5064/api
+@token = {{login_response.response.body.data.token}}
+@userId = {{create_user_response.response.body.data.id}}
+
+### ================================
+### 1. LOGIN
+### ================================
+# @name login_response
+POST {{baseUrl}}/auth/login
+Content-Type: application/json
+
+{
+  "username": "admin",
+  "password": "admin123"
+}
+
+### ================================
+### 2. CAMBIAR CONTRASEÑA (Usuario Autenticado)
+### ================================
+POST {{baseUrl}}/auth/change-password
+Content-Type: application/json
+Authorization: Bearer {{token}}
+
+{
+  "currentPassword": "admin123",
+  "newPassword": "admin456"
+}
+
+### ================================
+### 3. OBTENER TODOS LOS USUARIOS (ADMIN)
+### ================================
+GET {{baseUrl}}/users
+Authorization: Bearer {{token}}
+
+### ================================
+### 4. OBTENER USUARIO POR ID
+### ================================
+GET {{baseUrl}}/users/{{userId}}
+
+### ================================
+### 5. CREAR USUARIO COLABORADOR (ADMIN)
+### ================================
+# @name create_user_response
+POST {{baseUrl}}/users
+Content-Type: application/json
+Authorization: Bearer {{token}}
+
+{
+  "username": "juanperez",
+  "email": "juan.perez@example.com",
+  "password": "password123",
+  "rolSistema": "COLABORADOR",
+  "colaboradorId": "60d5ec49f1b2c8b1f8e4e1a1"
+}
+
+### ================================
+### 6. CREAR USUARIO BUSINESS_MANAGER (ADMIN)
+### ================================
+POST {{baseUrl}}/users
+Content-Type: application/json
+Authorization: Bearer {{token}}
+
+{
+  "username": "manager1",
+  "email": "manager1@example.com",
+  "password": "manager123",
+  "rolSistema": "BUSINESS_MANAGER",
+  "colaboradorId": "60d5ec49f1b2c8b1f8e4e1a2"
+}
+
+### ================================
+### 7. ACTUALIZAR USUARIO (ADMIN)
+### ================================
+PUT {{baseUrl}}/users/{{userId}}
+Content-Type: application/json
+Authorization: Bearer {{token}}
+
+{
+  "email": "juan.actualizado@example.com",
+  "rolSistema": "BUSINESS_MANAGER",
+  "colaboradorId": "60d5ec49f1b2c8b1f8e4e1a3"
+}
+
+### ================================
+### 8. RESETEAR CONTRASEÑA (ADMIN)
+### ================================
+POST {{baseUrl}}/users/{{userId}}/reset-password
+Content-Type: application/json
+Authorization: Bearer {{token}}
+
+{
+  "newPassword": "nuevaPassword123"
+}
+
+### ================================
+### 9. DESBLOQUEAR USUARIO (ADMIN)
+### ================================
+POST {{baseUrl}}/users/{{userId}}/unblock
+Authorization: Bearer {{token}}
+
+### ================================
+### 10. ELIMINAR USUARIO (ADMIN)
+### ================================
+DELETE {{baseUrl}}/users/{{userId}}
+Authorization: Bearer {{token}}
+
+### ================================
+### PRUEBAS DE ERRORES
+### ================================
+
+### Error: Login incorrecto
+POST {{baseUrl}}/auth/login
+Content-Type: application/json
+
+{
+  "username": "admin",
+  "password": "incorrecta"
+}
+
+### Error: Rol inválido
+POST {{baseUrl}}/users
+Content-Type: application/json
+Authorization: Bearer {{token}}
+
+{
+  "username": "testuser",
+  "email": "test@example.com",
+  "password": "password123",
+  "rolSistema": "ROL_INVALIDO"
+}
+
+### Error: Username duplicado
+POST {{baseUrl}}/users
+Content-Type: application/json
+Authorization: Bearer {{token}}
+
+{
+  "username": "admin",
+  "email": "otro@example.com",
+  "password": "password123",
+  "rolSistema": "ADMIN"
+}
+
+### Error: Sin token
+GET {{baseUrl}}/users
+
+### Error: Email inválido
+POST {{baseUrl}}/users
+Content-Type: application/json
+Authorization: Bearer {{token}}
+
+{
+  "username": "testuser",
+  "email": "emailinvalido",
+  "password": "password123",
+  "rolSistema": "COLABORADOR"
+}
+
+### Error: Contraseña corta
+POST {{baseUrl}}/users
+Content-Type: application/json
+Authorization: Bearer {{token}}
+
+{
+  "username": "testuser",
+  "email": "test@example.com",
+  "password": "123",
+  "rolSistema": "COLABORADOR"
+}
