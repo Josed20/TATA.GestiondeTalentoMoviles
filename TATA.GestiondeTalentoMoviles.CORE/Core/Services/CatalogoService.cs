@@ -2,6 +2,7 @@ using System.Linq;
 using System.Reflection;
 using System.Collections;
 using Newtonsoft.Json;
+using System.Text.Json;
 using TATA.GestiondeTalentoMoviles.CORE.Core.DTOs;
 using TATA.GestiondeTalentoMoviles.CORE.Core.Entities;
 using TATA.GestiondeTalentoMoviles.CORE.Core.Interfaces;
@@ -92,6 +93,20 @@ namespace TATA.GestiondeTalentoMoviles.CORE.Core.Services
 
             await _repo.CreateOrReplaceAsync(catalogo);
             return Map(catalogo);
+        }
+
+        // New overload that accepts JsonElement and routes to object-based UpdateAsync
+        public async Task<CatalogoReadDto> UpdateAsync(string seccion, JsonElement data)
+        {
+            // Convert JsonElement to a .NET object for reuse
+            object obj;
+
+            // If it's an array or object, keep as raw JSON string to allow deserialization into specific typed lists
+            var raw = data.GetRawText();
+            // Use Newtonsoft to parse into object
+            obj = JsonConvert.DeserializeObject<object>(raw) ?? raw;
+
+            return await UpdateAsync(seccion, obj);
         }
 
         public async Task<bool> DeleteIndexAsync(string seccion, int index)
