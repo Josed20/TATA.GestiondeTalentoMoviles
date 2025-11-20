@@ -82,6 +82,9 @@ builder.Services.AddTransient<IAuthService, AuthService>();
 // Usuarios
 builder.Services.AddTransient<IUserService, UserService>();
 builder.Services.AddTransient<IUserRepository, UserRepository>();
+//Alertas
+builder.Services.AddScoped<IAlertaRepository, AlertaRepository>();
+builder.Services.AddScoped<IAlertaService, AlertaService>();
 
 // Procesos Matching
 builder.Services.AddTransient<IProcesosMatchingService, ProcesosMatchingService>();
