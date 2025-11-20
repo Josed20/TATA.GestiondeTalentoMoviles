@@ -48,6 +48,18 @@ namespace TATA.GestiondeTalentoMoviles.CORE.Core.Services
             return entity == null ? null : MapToViewDto(entity);
         }
 
+        public async Task<IEnumerable<ProcesosMatchingViewDto>> GetByVacanteIdAsync(string vacanteId)
+        {
+            var list = await _repo.GetByVacanteIdAsync(vacanteId);
+            return list.Select(MapToViewDto);
+        }
+
+        public async Task<IEnumerable<ProcesosMatchingViewDto>> GetByFechaCreacionAsync(DateTime fechaCreacion)
+        {
+            var list = await _repo.GetByFechaCreacionAsync(fechaCreacion);
+            return list.Select(MapToViewDto);
+        }
+
         public async Task<ProcesosMatchingViewDto> UpdateAsync(string id, ProcesosMatchingUpdateDto dto)
         {
             var existing = await _repo.GetByIdAsync(id);
