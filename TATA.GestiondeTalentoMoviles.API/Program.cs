@@ -13,6 +13,7 @@ using TATA.GestiondeTalentoMoviles.CORE.Core.Settings;
 using TATA.GestiondeTalentoMoviles.CORE.Infrastructure.Repositories;
 using TATA.GestiondeTalentoMoviles.CORE.Services;
 using Microsoft.OpenApi.Models;
+using TATA.GestiondeTalentoMoviles.CORE.Interfaces;
 
 var builder = WebApplication.CreateBuilder(args);
 
@@ -105,6 +106,9 @@ builder.Services.AddTransient<IProcesosMatchingRepository, ProcesosMatchingRepos
 // Catalogo (nuevo)
 builder.Services.AddScoped<ICatalogoRepository, CatalogoRepository>();
 builder.Services.AddScoped<ICatalogoService, CatalogoService>();
+// Vacantes 
+builder.Services.AddScoped<IVacanteRepository, VacanteRepository>();
+builder.Services.AddScoped<IVacanteService, VacanteService>();
 
 // --- FIN DE REGISTRO DE SERVICIOS ---
 
