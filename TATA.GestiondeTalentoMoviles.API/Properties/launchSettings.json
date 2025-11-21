@@ -2,17 +2,17 @@
   "$schema": "https://json.schemastore.org/launchsettings.json",
   "profiles": {
     "http": {
-      "commandName": "Project",
-      "dotnetRunMessages": true,
-      "launchBrowser": false,
+        "commandName": "Project",
+        "dotnetRunMessages": true,
+        "launchBrowser": false,
 
-      // --- ¡ESTA ES LA LÍNEA CORREGIDA! ---
-      // Ahora escucha en localhost Y en tu IP de Wi-Fi.
-      "applicationUrl": "http://localhost:5260;http://10.72.90.84:5260",
+        // --- ¡ESTA ES LA LÍNEA CORREGIDA! ---
+        // Ahora escucha en localhost Y en tu IP de Wi-Fi.
+        "applicationUrl": "http://localhost:5260;http://192.168.18.4:5260",
 
-      "environmentVariables": {
-        "ASPNETCORE_ENVIRONMENT": "Development"
-      }
+        "environmentVariables": {
+            "ASPNETCORE_ENVIRONMENT": "Development"
+        }
     }
   }
 }
