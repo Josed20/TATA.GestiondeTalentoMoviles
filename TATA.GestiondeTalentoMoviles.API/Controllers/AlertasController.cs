@@ -8,7 +8,7 @@ namespace TATA.GestiondeTalentoMoviles.API.Controllers
 {
     [Route("api/alertas")]
     [ApiController]
-    //[Authorize(Roles = AppRoles.ADMIN)]
+    [Authorize(Roles = AppRoles.ADMIN)]
     public class AlertasController : ControllerBase
     {
         private readonly IAlertaService _service;
@@ -40,6 +40,26 @@ namespace TATA.GestiondeTalentoMoviles.API.Controllers
                 return NotFound(new { success = false, message = "Alerta no encontrada" });
 
             return Ok(new { success = true, data = alerta });
+        }
+
+        /// <summary>
+        /// Obtiene alertas de un colaborador específico
+        /// </summary>
+        [HttpGet("colaborador/{colaboradorId}")]
+        public async Task<IActionResult> GetByColaborador(string colaboradorId)
+        {
+            var alertas = await _service.GetAlertasPorColaboradorAsync(colaboradorId);
+            return Ok(new { success = true, data = alertas });
+        }
+
+        /// <summary>
+        /// Obtiene todas las alertas pendientes
+        /// </summary>
+        [HttpGet("pendientes")]
+        public async Task<IActionResult> GetPendientes()
+        {
+            var alertas = await _service.GetAlertasPendientesAsync();
+            return Ok(new { success = true, data = alertas });
         }
 
         /// <summary>
