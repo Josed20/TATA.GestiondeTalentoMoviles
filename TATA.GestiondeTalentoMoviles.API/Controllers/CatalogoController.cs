@@ -18,7 +18,7 @@ namespace TATA.GestiondeTalentoMoviles.API.Controllers
         }
 
         // --------------------------------------------
-        // GET: Obtener catálogo completo
+        // GET: Obtener catálogo completo sip
         // --------------------------------------------
         [HttpGet]
         public async Task<IActionResult> GetAll()
