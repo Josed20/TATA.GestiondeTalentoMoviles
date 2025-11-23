@@ -11,28 +11,58 @@ namespace TATA.GestiondeTalentoMoviles.CORE.Entities
         [BsonRepresentation(BsonType.ObjectId)]
         public string? Id { get; set; }
 
-        [BsonElement("perfil_name")]
-        public string PerfilName { get; set; } = null!;
+        [BsonElement("nombrePerfil")]
+        public string NombrePerfil { get; set; } = null!;
 
-        [BsonElement("id_area")]
-        public string IdArea { get; set; } = null!;
+        [BsonElement("area")]
+        public string Area { get; set; } = null!;
 
-        [BsonElement("start_date")]
-        public DateTimeOffset StartDate { get; set; }
+        [BsonElement("rolLaboral")]
+        public string RolLaboral { get; set; } = null!;
 
-        [BsonElement("urgency")]
-        public int Urgency { get; set; }
+        [BsonElement("skillsRequeridos")]
+        public List<SkillRequeridoVacante> SkillsRequeridos { get; set; } = new();
 
-        [BsonElement("state")]
-        public int State { get; set; }
+        [BsonElement("certificacionesRequeridas")]
+        public List<string> CertificacionesRequeridas { get; set; } = new();
 
-        [BsonElement("id_rol")]
-        public string IdRol { get; set; } = null!;
+        [BsonElement("fechaInicio")]
+        public DateTime FechaInicio { get; set; }
 
-        [BsonElement("certifications")]
-        public List<string> Certifications { get; set; } = new();
+        [BsonElement("urgencia")]
+        public string Urgencia { get; set; } = "MEDIA";
 
-        [BsonElement("skills")]
-        public List<string> Skills { get; set; } = new();
+        [BsonElement("estadoVacante")]
+        public string EstadoVacante { get; set; } = "ABIERTA";
+
+        [BsonElement("creadaPorUsuarioId")]
+        [BsonRepresentation(BsonType.ObjectId)]
+        public string CreadaPorUsuarioId { get; set; } = null!;
+
+        [BsonElement("fechaCreacion")]
+        public DateTime FechaCreacion { get; set; } = DateTime.UtcNow;
+
+        [BsonElement("fechaActualizacion")]
+        public DateTime FechaActualizacion { get; set; } = DateTime.UtcNow;
+
+        [BsonElement("usuarioActualizacion")]
+        [BsonRepresentation(BsonType.ObjectId)]
+        public string UsuarioActualizacion { get; set; } = null!;
+    }
+
+    public class SkillRequeridoVacante
+    {
+
+        [BsonElement("nombre")]
+        public string Nombre { get; set; } = null!;
+
+        [BsonElement("tipo")]
+        public string Tipo { get; set; } = null!;
+
+        [BsonElement("nivelDeseado")]
+        public int NivelDeseado { get; set; }
+
+        [BsonElement("esCritico")]
+        public bool EsCritico { get; set; }
     }
 }

@@ -1,5 +1,3 @@
-using System;
-using System.Collections.Generic;
 using MongoDB.Bson;
 using MongoDB.Bson.Serialization.Attributes;
 
@@ -9,36 +7,37 @@ namespace TATA.GestiondeTalentoMoviles.CORE.Core.Entities
     {
         [BsonId]
         [BsonRepresentation(BsonType.ObjectId)]
-        public string? Id { get; set; }
+        public string Id { get; set; }
 
-        [BsonElement("nombre")]
-        public string Nombre { get; set; } = string.Empty;
-
-        [BsonElement("apellido")]
-        public string Apellido { get; set; } = string.Empty;
+        [BsonElement("username")]
+        public string Username { get; set; }
 
         [BsonElement("email")]
-        public string Email { get; set; } = string.Empty;
+        public string Email { get; set; }
 
-        [BsonElement("password")]
-        public string Password { get; set; } = string.Empty;
+        [BsonElement("passwordHash")]
+        public string PasswordHash { get; set; }
 
-        [BsonElement("roles")]
-        public List<string> Roles { get; set; } = new List<string>();
+        [BsonElement("rolSistema")]
+        public string RolSistema { get; set; } // Ajustado a string singular
 
-        [BsonElement("estado")]
-        public int Estado { get; set; } // 1 = Activo, 0 = Inactivo
+        [BsonRepresentation(BsonType.ObjectId)]
+        [BsonElement("colaboradorId")]
+        public string ColaboradorId { get; set; }
 
-        [BsonElement("refreshToken")]
-        public string? RefreshToken { get; set; }
+        [BsonElement("intentosFallidos")]
+        public int IntentosFallidos { get; set; }
 
-        [BsonElement("refreshTokenExpiryTime")]
-        public DateTime? RefreshTokenExpiryTime { get; set; }
+        [BsonElement("bloqueadoHasta")]
+        [BsonDateTimeOptions(Kind = DateTimeKind.Utc)]
+        public DateTime? BloqueadoHasta { get; set; } // Permite valores nulos
 
-        [BsonElement("createdAt")]
-        public DateTime CreatedAt { get; set; } = DateTime.UtcNow;
+        [BsonElement("ultimoAcceso")]
+        [BsonDateTimeOptions(Kind = DateTimeKind.Utc)]
+        public DateTime UltimoAcceso { get; set; }
 
-        [BsonElement("updatedAt")]
-        public DateTime UpdatedAt { get; set; } = DateTime.UtcNow;
+        [BsonElement("fechaCreacion")]
+        [BsonDateTimeOptions(Kind = DateTimeKind.Utc)]
+        public DateTime FechaCreacion { get; set; }
     }
 }

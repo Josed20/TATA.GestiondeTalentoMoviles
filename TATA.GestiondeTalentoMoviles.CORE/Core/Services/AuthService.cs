@@ -1,16 +1,12 @@
-using System;
-using System.Collections.Generic;
-using System.IdentityModel.Tokens.Jwt;
-using System.Security.Claims;
-using System.Security.Cryptography;
-using System.Text;
-using System.Threading.Tasks;
 using Microsoft.Extensions.Configuration;
 using Microsoft.IdentityModel.Tokens;
+using System.IdentityModel.Tokens.Jwt;
+using System.Security.Claims;
+using System.Text;
 using TATA.GestiondeTalentoMoviles.CORE.Core.DTOs;
 using TATA.GestiondeTalentoMoviles.CORE.Core.Entities;
 using TATA.GestiondeTalentoMoviles.CORE.Core.Interfaces;
-using BCrypt.Net;
+using TATA.GestiondeTalentoMoviles.CORE.Core.Interfaces.Repositories;
 
 namespace TATA.GestiondeTalentoMoviles.CORE.Core.Services
 {
@@ -18,6 +14,8 @@ namespace TATA.GestiondeTalentoMoviles.CORE.Core.Services
     {
         private readonly IUserRepository _userRepository;
         private readonly IConfiguration _configuration;
+        private const int MAX_LOGIN_ATTEMPTS = 5;
+        private const int LOCKOUT_MINUTES = 15;
 
         public AuthService(IUserRepository userRepository, IConfiguration configuration)
         {
@@ -25,191 +23,100 @@ namespace TATA.GestiondeTalentoMoviles.CORE.Core.Services
             _configuration = configuration;
         }
 
-        public async Task<AuthResponseDto> RegisterAsync(RegisterRequestDto dto)
+        public async Task<AuthResponseDto> LoginAsync(AuthRequestDto request)
         {
-            // 1. Verificar si el email ya existe
-            var existingUser = await _userRepository.GetByEmailAsync(dto.Email);
-            if (existingUser != null)
-            {
-                throw new InvalidOperationException("El email ya está registrado");
-            }
+            var user = await _userRepository.GetByUsernameAsync(request.Username);
 
-            // 2. Hashear la contraseña con BCrypt
-            var hashedPassword = BCrypt.Net.BCrypt.HashPassword(dto.Password);
-
-            // 3. Crear el nuevo usuario
-            var newUser = new User
-            {
-                Nombre = dto.Nombre,
-                Apellido = dto.Apellido,
-                Email = dto.Email.ToLower(),
-                Password = hashedPassword,
-                Estado = 1, // Activo por defecto
-                CreatedAt = DateTime.UtcNow,
-                UpdatedAt = DateTime.UtcNow,
-                Roles = new List<string>() // Por defecto sin roles, se pueden asignar después
-            };
-
-            // 4. Guardar en la base de datos
-            await _userRepository.CreateAsync(newUser);
-
-            // 5. Generar tokens
-            var token = GenerateJwtToken(newUser);
-            var refreshToken = GenerateRefreshToken();
-
-            // 6. Guardar el refresh token en el usuario
-            newUser.RefreshToken = refreshToken;
-            newUser.RefreshTokenExpiryTime = DateTime.UtcNow.AddDays(7); // 7 días de validez
-            await _userRepository.UpdateAsync(newUser);
-
-            // 7. Devolver la respuesta
-            return new AuthResponseDto
-            {
-                Token = token,
-                RefreshToken = refreshToken,
-                TokenExpires = DateTime.UtcNow.AddHours(1),
-                User = new UserResponseDto
-                {
-                    Id = newUser.Id!,
-                    NombreCompleto = $"{newUser.Nombre} {newUser.Apellido}",
-                    Email = newUser.Email,
-                    Roles = newUser.Roles
-                }
-            };
-        }
-
-        public async Task<AuthResponseDto> LoginAsync(LoginRequestDto dto)
-        {
-            // 1. Buscar usuario por email
-            var user = await _userRepository.GetByEmailAsync(dto.Email.ToLower());
+            // 1. Validar si el usuario existe
             if (user == null)
+                throw new UnauthorizedAccessException("Usuario o contraseña incorrecta.");
+
+            // 2. Validar si la cuenta está bloqueada
+            if (user.BloqueadoHasta.HasValue && user.BloqueadoHasta > DateTime.UtcNow)
+                throw new UnauthorizedAccessException($"Cuenta bloqueada temporalmente. Intente de nuevo en {LOCKOUT_MINUTES} minutos.");
+
+            // 3. Validar la contraseña
+            bool isPasswordValid = BCrypt.Net.BCrypt.Verify(request.Password, user.PasswordHash);
+
+            if (!isPasswordValid)
             {
-                throw new UnauthorizedAccessException("Credenciales incorrectas");
+                // Si falla: Incrementar intentos y bloquear si es necesario
+                user.IntentosFallidos++;
+                if (user.IntentosFallidos >= MAX_LOGIN_ATTEMPTS)
+                {
+                    user.BloqueadoHasta = DateTime.UtcNow.AddMinutes(LOCKOUT_MINUTES);
+                }
+                await _userRepository.UpdateAsync(user.Id, user); // Guardar cambios
+                throw new UnauthorizedAccessException("Usuario o contraseña incorrecta.");
             }
 
-            // 2. Verificar el estado del usuario
-            if (user.Estado != 1)
-            {
-                throw new UnauthorizedAccessException("Usuario inactivo");
-            }
+            // 4. ¡Éxito! Limpiar intentos y generar token
+            user.IntentosFallidos = 0;
+            user.BloqueadoHasta = null;
+            user.UltimoAcceso = DateTime.UtcNow;
+            await _userRepository.UpdateAsync(user.Id, user); // Guardar cambios
 
-            // 3. Verificar la contraseña con BCrypt
-            if (!BCrypt.Net.BCrypt.Verify(dto.Password, user.Password))
-            {
-                throw new UnauthorizedAccessException("Credenciales incorrectas");
-            }
-
-            // 4. Generar tokens
             var token = GenerateJwtToken(user);
-            var refreshToken = GenerateRefreshToken();
 
-            // 5. Guardar el refresh token en el usuario
-            user.RefreshToken = refreshToken;
-            user.RefreshTokenExpiryTime = DateTime.UtcNow.AddDays(7);
-            await _userRepository.UpdateAsync(user);
-
-            // 6. Devolver la respuesta
             return new AuthResponseDto
             {
                 Token = token,
-                RefreshToken = refreshToken,
-                TokenExpires = DateTime.UtcNow.AddHours(1),
-                User = new UserResponseDto
-                {
-                    Id = user.Id!,
-                    NombreCompleto = $"{user.Nombre} {user.Apellido}",
-                    Email = user.Email,
-                    Roles = user.Roles
-                }
+                Username = user.Username,
+                RolSistema = user.RolSistema,
+                ColaboradorId = user.ColaboradorId
             };
         }
 
-        public async Task<AuthResponseDto> RefreshTokenAsync(string refreshToken)
+        public async Task ChangePasswordAsync(string userId, UserChangePasswordDto dto)
         {
-            // 1. Buscar un usuario con ese refresh token
-            var user = await _userRepository.GetByRefreshTokenAsync(refreshToken);
-            if (user == null || user.RefreshTokenExpiryTime <= DateTime.UtcNow)
-            {
-                throw new UnauthorizedAccessException("Refresh token inválido o expirado");
-            }
+            var user = await _userRepository.GetByIdAsync(userId);
+            
+            if (user == null)
+                throw new InvalidOperationException("Usuario no encontrado.");
 
-            // 2. Generar nuevos tokens
-            var newToken = GenerateJwtToken(user);
-            var newRefreshToken = GenerateRefreshToken();
+            // Verificar que la contraseña actual sea correcta
+            bool isCurrentPasswordValid = BCrypt.Net.BCrypt.Verify(dto.CurrentPassword, user.PasswordHash);
+            
+            if (!isCurrentPasswordValid)
+                throw new UnauthorizedAccessException("La contraseña actual es incorrecta.");
 
-            // 3. Actualizar el refresh token
-            user.RefreshToken = newRefreshToken;
-            user.RefreshTokenExpiryTime = DateTime.UtcNow.AddDays(7);
-            await _userRepository.UpdateAsync(user);
-
-            // 4. Devolver la respuesta
-            return new AuthResponseDto
-            {
-                Token = newToken,
-                RefreshToken = newRefreshToken,
-                TokenExpires = DateTime.UtcNow.AddHours(1),
-                User = new UserResponseDto
-                {
-                    Id = user.Id!,
-                    NombreCompleto = $"{user.Nombre} {user.Apellido}",
-                    Email = user.Email,
-                    Roles = user.Roles
-                }
-            };
+            // Hashear y guardar la nueva contraseña
+            user.PasswordHash = BCrypt.Net.BCrypt.HashPassword(dto.NewPassword);
+            
+            await _userRepository.UpdateAsync(user.Id, user);
         }
 
-        #region Private Methods
-
-        /// <summary>
-        /// Genera un JWT token para el usuario
-        /// </summary>
         private string GenerateJwtToken(User user)
         {
-            var jwtKey = _configuration["Jwt:Key"] ?? throw new InvalidOperationException("JWT Key no configurada");
-            var jwtIssuer = _configuration["Jwt:Issuer"] ?? throw new InvalidOperationException("JWT Issuer no configurado");
-            var jwtAudience = _configuration["Jwt:Audience"] ?? throw new InvalidOperationException("JWT Audience no configurado");
+            var jwtKey = _configuration["Jwt:Key"];
+            if (string.IsNullOrEmpty(jwtKey))
+                throw new InvalidOperationException("La clave JWT (Jwt:Key) no está configurada.");
 
             var securityKey = new SymmetricSecurityKey(Encoding.UTF8.GetBytes(jwtKey));
             var credentials = new SigningCredentials(securityKey, SecurityAlgorithms.HmacSha256);
 
-            // Claims del usuario
+            // Tus "Claims" son la info dentro del token
             var claims = new List<Claim>
             {
-                new Claim(JwtRegisteredClaimNames.Sub, user.Id!),
+                new Claim(JwtRegisteredClaimNames.Sub, user.Username),
                 new Claim(JwtRegisteredClaimNames.Email, user.Email),
-                new Claim(JwtRegisteredClaimNames.Jti, Guid.NewGuid().ToString()),
-                new Claim("nombre", user.Nombre),
-                new Claim("apellido", user.Apellido)
+                new Claim(ClaimTypes.Role, user.RolSistema ?? string.Empty),
+                // Add also 'role' and 'roles' claims to be compatible with different consumers
+                new Claim("role", user.RolSistema ?? string.Empty),
+                new Claim("roles", user.RolSistema ?? string.Empty),
+                new Claim("uid", user.Id),
+                new Claim("cid", user.ColaboradorId ?? string.Empty),
+                new Claim(JwtRegisteredClaimNames.Jti, Guid.NewGuid().ToString())
             };
 
-            // Agregar roles como claims
-            foreach (var role in user.Roles)
-            {
-                claims.Add(new Claim(ClaimTypes.Role, role));
-            }
-
             var token = new JwtSecurityToken(
-                issuer: jwtIssuer,
-                audience: jwtAudience,
+                issuer: _configuration["Jwt:Issuer"],
+                audience: _configuration["Jwt:Audience"],
                 claims: claims,
-                expires: DateTime.UtcNow.AddHours(1), // Token válido por 1 hora
-                signingCredentials: credentials
-            );
+                expires: DateTime.UtcNow.AddHours(8),
+                signingCredentials: credentials);
 
             return new JwtSecurityTokenHandler().WriteToken(token);
         }
-
-        /// <summary>
-        /// Genera un refresh token aleatorio
-        /// </summary>
-        private string GenerateRefreshToken()
-        {
-            var randomNumber = new byte[32];
-            using var rng = RandomNumberGenerator.Create();
-            rng.GetBytes(randomNumber);
-            return Convert.ToBase64String(randomNumber);
-        }
-
-        #endregion
     }
 }

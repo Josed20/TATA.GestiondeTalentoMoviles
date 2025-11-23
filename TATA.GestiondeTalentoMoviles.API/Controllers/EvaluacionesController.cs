@@ -1,88 +1,66 @@
 ﻿using Microsoft.AspNetCore.Mvc;
-using System.Collections.Generic;
-using System.Threading.Tasks;
-using TATA.GestiondeTalentoMoviles.CORE.Core.DTOs;
+using TATA.GestiondeTalentoMoviles.CORE.Entities;
 using TATA.GestiondeTalentoMoviles.CORE.Interfaces;
+using TATA.GestiondeTalentoMoviles.INFRASTRUCTURE.Repositories;
 
 namespace TATA.GestiondeTalentoMoviles.API.Controllers
 {
-    [Route("api/[controller]")]
     [ApiController]
+    [Route("api/[controller]")]
     public class EvaluacionesController : ControllerBase
     {
-        private readonly IEvaluacionService _service;
+        private readonly IEvaluacionRepository _repository;
 
-        // Constructor para inyección de dependencia
-        public EvaluacionesController(IEvaluacionService service)
+        public EvaluacionesController(IEvaluacionRepository repository)
         {
-            _service = service;
+            _repository = repository;
         }
 
-        // --- GET: /api/Evaluaciones ---
         [HttpGet]
         public async Task<IActionResult> GetAll()
         {
-            var evaluaciones = await _service.GetAllAsync();
+            var evaluaciones = await _repository.GetAllAsync();
             return Ok(evaluaciones);
         }
 
-        // --- GET: /api/Evaluaciones/{id} ---
         [HttpGet("{id}")]
         public async Task<IActionResult> GetById(string id)
         {
-            var evaluacion = await _service.GetByIdAsync(id);
-            if (evaluacion == null)
-            {
-                return NotFound();
-            }
+            var evaluacion = await _repository.GetByIdAsync(id);
+            if (evaluacion == null) return NotFound();
             return Ok(evaluacion);
         }
 
-        // --- POST: /api/Evaluaciones ---
         [HttpPost]
-        public async Task<IActionResult> Create([FromBody] EvaluacionCreateDto createDto)
+        public async Task<IActionResult> Create(Evaluacion evaluacion)
         {
-            if (!ModelState.IsValid) return BadRequest(ModelState);
+            evaluacion.FechaCreacion = DateTime.UtcNow;
+            evaluacion.FechaActualizacion = DateTime.UtcNow;
 
-            var nuevaEvaluacion = await _service.CreateAsync(createDto);
-
-            // Retorna 201 Created y el enlace para acceder al nuevo recurso.
-            return CreatedAtAction(nameof(GetById), new { id = nuevaEvaluacion.Id }, nuevaEvaluacion);
+            await _repository.AddAsync(evaluacion);
+            return CreatedAtAction(nameof(GetById), new { id = evaluacion.Id }, evaluacion);
         }
 
-        // --- PUT: /api/Evaluaciones/{id} ---
         [HttpPut("{id}")]
-        public async Task<IActionResult> Update(string id, [FromBody] EvaluacionCreateDto updateDto)
+        public async Task<IActionResult> Update(string id, Evaluacion evaluacion)
         {
-            if (!ModelState.IsValid) return BadRequest(ModelState);
+            var existing = await _repository.GetByIdAsync(id);
+            if (existing == null) return NotFound();
 
-            // Llama al servicio para actualizar el documento
-            var result = await _service.UpdateAsync(id, updateDto);
+            evaluacion.Id = id;
+            evaluacion.FechaActualizacion = DateTime.UtcNow;
 
-            if (result == null)
-            {
-                // Si la evaluación no existe, retorna 404
-                return NotFound();
-            }
-
-            // Retorna 200 OK con el recurso actualizado
-            return Ok(result);
+            await _repository.UpdateAsync(evaluacion);
+            return NoContent();
         }
 
-        // --- DELETE: /api/Evaluaciones/{id} ---
         [HttpDelete("{id}")]
         public async Task<IActionResult> Delete(string id)
         {
-            // Llama al servicio para eliminar el documento
-            var result = await _service.DeleteAsync(id);
+            var existing = await _repository.GetByIdAsync(id);
+            if (existing == null) return NotFound();
 
-            if (!result)
-            {
-                // Si el documento no existía, retorna 404
-                return NotFound();
-            }
-
-            // Retorna 204 No Content
+            await _repository.DeleteAsync(id);
             return NoContent();
         }
     }

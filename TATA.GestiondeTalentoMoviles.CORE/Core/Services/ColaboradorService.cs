@@ -1,4 +1,5 @@
-﻿using System.Collections.Generic;
+﻿using System;
+using System.Collections.Generic;
 using System.Linq;
 using System.Threading.Tasks;
 using TATA.GestiondeTalentoMoviles.CORE.Core.DTOs;
@@ -15,6 +16,10 @@ namespace TATA.GestiondeTalentoMoviles.CORE.Core.Services
         {
             _repository = repository;
         }
+
+        // ====================================
+        // Métodos CRUD básicos
+        // ====================================
 
         public async Task<ColaboradorReadDto> CreateAsync(ColaboradorCreateDto createDto)
         {
@@ -48,8 +53,8 @@ namespace TATA.GestiondeTalentoMoviles.CORE.Core.Services
             var colaboradorExistente = await _repository.GetByIdAsync(id);
             if (colaboradorExistente == null) return null;
 
-            // Mapear UpdateDto -> Entidad
-            var colaboradorActualizado = MapUpdateDtoToEntity(id, updateDto);
+            // Mapear UpdateDto -> Entidad (preservando FechaRegistro del existente)
+            var colaboradorActualizado = MapUpdateDtoToEntity(colaboradorExistente, updateDto);
 
             // Actualizar en repositorio
             var actualizado = await _repository.UpdateAsync(id, colaboradorActualizado);
@@ -66,7 +71,7 @@ namespace TATA.GestiondeTalentoMoviles.CORE.Core.Services
             var colaboradorExistente = await _repository.GetByIdAsync(id);
             if (colaboradorExistente == null) return false;
 
-            // Borrado lógico: marcar como Inactivo
+            // Borrado lógico: marcar como INACTIVO
             return await _repository.DeleteAsync(id);
         }
 
@@ -81,48 +86,65 @@ namespace TATA.GestiondeTalentoMoviles.CORE.Core.Services
                 // Id se deja null, MongoDB lo generará automáticamente
                 Nombres = dto.Nombres,
                 Apellidos = dto.Apellidos,
+                Correo = dto.Correo,
                 Area = dto.Area,
-                RolActual = dto.RolActual,
-                Skills = dto.Skills,
-                NivelCodigo = dto.NivelCodigo,
+                RolLaboral = dto.RolLaboral,
+                Estado = "ACTIVO", // Por defecto
+                DisponibleParaMovilidad = dto.DisponibleParaMovilidad,
+                Skills = dto.Skills.Select(s => new SkillColaborador
+                {
+                    Nombre = s.Nombre,
+                    Tipo = s.Tipo,
+                    Nivel = s.Nivel,
+                    EsCritico = s.EsCritico
+                }).ToList(),
                 Certificaciones = dto.Certificaciones.Select(c => new CertificacionColaborador
                 {
                     Nombre = c.Nombre,
-                    ImagenUrl = c.ImagenUrl,
+                    Institucion = c.Institucion,
                     FechaObtencion = c.FechaObtencion,
-                    Estado = "vigente" // ✅ Seteado automáticamente en backend
-                }).ToList(),
-                Disponibilidad = new DisponibilidadColaborador
-                {
-                    Estado = dto.Disponibilidad.Estado,
-                    Dias = dto.Disponibilidad.Dias
-                }
+                    FechaVencimiento = c.FechaVencimiento,
+                    ArchivoPdfUrl = c.ArchivoPdfUrl,
+                    Estado = "VIGENTE",
+                    FechaRegistro = DateTime.UtcNow,
+                    FechaActualizacion = DateTime.UtcNow
+                }).ToList()
+                // FechaRegistro y FechaActualizacion a nivel colaborador se completan en el repositorio
             };
         }
 
-        private static Colaborador MapUpdateDtoToEntity(string id, ColaboradorUpdateDto dto)
+        private static Colaborador MapUpdateDtoToEntity(Colaborador existente, ColaboradorUpdateDto dto)
         {
             return new Colaborador
             {
-                Id = id, // ✅ Mantener el mismo ID
+                Id = existente.Id, // Mantener el mismo ID del existente
                 Nombres = dto.Nombres,
                 Apellidos = dto.Apellidos,
+                Correo = dto.Correo,
                 Area = dto.Area,
-                RolActual = dto.RolActual,
-                Skills = dto.Skills,
-                NivelCodigo = dto.NivelCodigo,
+                RolLaboral = dto.RolLaboral,
+                DisponibleParaMovilidad = dto.DisponibleParaMovilidad,
+                Estado = !string.IsNullOrWhiteSpace(dto.Estado) ? dto.Estado : existente.Estado,
+                FechaRegistro = existente.FechaRegistro, // Preservar FechaRegistro original
+                Skills = dto.Skills.Select(s => new SkillColaborador
+                {
+                    Nombre = s.Nombre,
+                    Tipo = s.Tipo,
+                    Nivel = s.Nivel,
+                    EsCritico = s.EsCritico
+                }).ToList(),
                 Certificaciones = dto.Certificaciones.Select(c => new CertificacionColaborador
                 {
                     Nombre = c.Nombre,
-                    ImagenUrl = c.ImagenUrl,
+                    Institucion = c.Institucion,
                     FechaObtencion = c.FechaObtencion,
-                    Estado = "vigente" // ✅ Seteado automáticamente en backend
-                }).ToList(),
-                Disponibilidad = new DisponibilidadColaborador
-                {
-                    Estado = dto.Disponibilidad.Estado,
-                    Dias = dto.Disponibilidad.Dias
-                }
+                    FechaVencimiento = c.FechaVencimiento,
+                    ArchivoPdfUrl = c.ArchivoPdfUrl,
+                    Estado = "VIGENTE",
+                    FechaRegistro = DateTime.UtcNow,
+                    FechaActualizacion = DateTime.UtcNow
+                }).ToList()
+                // FechaActualizacion a nivel colaborador se actualiza en el repositorio antes del Replace
             };
         }
 
@@ -133,22 +155,33 @@ namespace TATA.GestiondeTalentoMoviles.CORE.Core.Services
                 Id = c.Id!,
                 Nombres = c.Nombres,
                 Apellidos = c.Apellidos,
+                Correo = c.Correo,
                 Area = c.Area,
-                RolActual = c.RolActual,
-                Skills = c.Skills,
-                NivelCodigo = c.NivelCodigo,
+                RolLaboral = c.RolLaboral,
+                Estado = c.Estado,
+                DisponibleParaMovilidad = c.DisponibleParaMovilidad,
+                Skills = c.Skills.Select(s => new SkillReadDto
+                {
+                    Nombre = s.Nombre,
+                    Tipo = s.Tipo,
+                    Nivel = s.Nivel,
+                    EsCritico = s.EsCritico
+                }).ToList(),
                 Certificaciones = c.Certificaciones.Select(cert => new CertificacionReadDto
                 {
+                    CertificacionId = cert.CertificacionId,
                     Nombre = cert.Nombre,
-                    ImagenUrl = cert.ImagenUrl,
+                    Institucion = cert.Institucion,
                     FechaObtencion = cert.FechaObtencion,
-                    Estado = cert.Estado
+                    FechaVencimiento = cert.FechaVencimiento,
+                    ArchivoPdfUrl = cert.ArchivoPdfUrl,
+                    Estado = cert.Estado,
+                    FechaRegistro = cert.FechaRegistro,
+                    FechaActualizacion = cert.FechaActualizacion,
+                    ProximaEvaluacion = cert.ProximaEvaluacion
                 }).ToList(),
-                Disponibilidad = new DisponibilidadDto
-                {
-                    Estado = c.Disponibilidad.Estado,
-                    Dias = c.Disponibilidad.Dias
-                }
+                FechaRegistro = c.FechaRegistro,
+                FechaActualizacion = c.FechaActualizacion
             };
         }
     }
