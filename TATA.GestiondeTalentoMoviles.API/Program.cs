@@ -14,6 +14,7 @@ using TATA.GestiondeTalentoMoviles.CORE.Infrastructure.Repositories;
 using TATA.GestiondeTalentoMoviles.CORE.Services;
 using Microsoft.OpenApi.Models;
 using TATA.GestiondeTalentoMoviles.CORE.Interfaces;
+using TATA.GestiondeTalentoMoviles.INFRASTRUCTURE.Repositories;
 
 var builder = WebApplication.CreateBuilder(args);
 
@@ -109,6 +110,17 @@ builder.Services.AddScoped<ICatalogoService, CatalogoService>();
 // Vacantes 
 builder.Services.AddScoped<IVacanteRepository, VacanteRepository>();
 builder.Services.AddScoped<IVacanteService, VacanteService>();
+
+// Evaluaciones
+builder.Services.AddScoped<IEvaluacionRepository, EvaluacionesRepository>();
+builder.Services.AddScoped<IEvaluacionService, EvaluacionService>();
+
+// Evaluaciones II (Plantillas)
+builder.Services.AddScoped<IEvaluacionesIIRepository, EvaluacionesIIRepository>();
+builder.Services.AddScoped<IEvaluacionesIIService, EvaluacionesIIService>();
+
+// Plantilla Evaluación
+builder.Services.AddScoped<IPlantillaEvaluacionService, PlantillaEvaluacionService>();
 
 // --- FIN DE REGISTRO DE SERVICIOS ---
 
