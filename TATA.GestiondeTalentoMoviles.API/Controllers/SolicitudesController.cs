@@ -16,7 +16,7 @@ namespace TATA.GestiondeTalentoMoviles.API.Controllers
         }
 
         /// <summary>
-        /// Crea una nueva solicitud (certificación o entrevista de desempeño)
+        /// Crea una nueva solicitud (certificación, entrevista de desempeño o actualización de skills)
         /// </summary>
         /// <param name="dto">Datos de la solicitud</param>
         /// <returns>Solicitud creada con su ID asignado</returns>

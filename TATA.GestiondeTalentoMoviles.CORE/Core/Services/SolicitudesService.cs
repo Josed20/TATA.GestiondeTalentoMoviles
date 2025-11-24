@@ -49,6 +49,15 @@ namespace TATA.GestiondeTalentoMoviles.CORE.Services
                 }
             }
 
+            // Validación específica para solicitudes de actualización de skills
+            if (dto.TipoSolicitudGeneral == "ACTUALIZACION_SKILLS")
+            {
+                if (dto.CambiosSkillsPropuestos == null || dto.CambiosSkillsPropuestos.Count == 0)
+                {
+                    throw new ArgumentException("Para solicitudes de tipo ACTUALIZACION_SKILLS se requiere al menos un cambio de skill en 'cambiosSkillsPropuestos'");
+                }
+            }
+
             var entidad = MapCreateDtoToEntity(dto, usuarioIdFinal);
 
             var creada = await _repo.CreateAsync(entidad);
@@ -122,6 +131,16 @@ namespace TATA.GestiondeTalentoMoviles.CORE.Services
 
             if (actualizada == null) return null;
 
+            // TODO: Aplicar cambios automáticamente cuando se apruebe una solicitud
+            // Si actualizada.TipoSolicitudGeneral == "ACTUALIZACION_SKILLS" 
+            // && dto.EstadoSolicitud == "APROBADA"
+            // entonces aplicar los cambios en actualizada.CambiosSkillsPropuestos
+            // al Colaborador correspondiente:
+            //   - Actualizar niveles de skills existentes
+            //   - Modificar estado crítico de skills
+            //   - Agregar nuevos skills al colaborador
+            //   - Usar _colaboradorRepo para persistir los cambios
+
             return MapEntityToReadDto(actualizada);
         }
 
@@ -189,6 +208,23 @@ namespace TATA.GestiondeTalentoMoviles.CORE.Services
                     PropuestoPorUsuarioId = propuestoPorId
                 };
             }
+            // Si es solicitud de actualización de skills
+            if (dto.TipoSolicitudGeneral == "ACTUALIZACION_SKILLS"
+                && dto.CambiosSkillsPropuestos != null)
+            {
+                solicitud.CambiosSkillsPropuestos = dto.CambiosSkillsPropuestos
+                    .Select(c => new CambioSkillPropuestaSolicitud
+                    {
+                        Nombre = c.Nombre,
+                        Tipo = c.Tipo,
+                        NivelActual = c.NivelActual,
+                        NivelPropuesto = c.NivelPropuesto,
+                        EsCriticoActual = c.EsCriticoActual,
+                        EsCriticoPropuesto = c.EsCriticoPropuesto,
+                        Motivo = c.Motivo
+                    }).ToList();
+            }
+
 
             return solicitud;
         }
@@ -221,6 +257,18 @@ namespace TATA.GestiondeTalentoMoviles.CORE.Services
                         FechaSugerida = s.DatosEntrevistaPropuesta.FechaSugerida,
                         PropuestoPorUsuarioId = s.DatosEntrevistaPropuesta.PropuestoPorUsuarioId
                     },
+                CambiosSkillsPropuestos = s.CambiosSkillsPropuestos == null
+                    ? null
+                    : s.CambiosSkillsPropuestos.Select(c => new CambioSkillPropuestaReadDto
+                    {
+                        Nombre = c.Nombre,
+                        Tipo = c.Tipo,
+                        NivelActual = c.NivelActual,
+                        NivelPropuesto = c.NivelPropuesto,
+                        EsCriticoActual = c.EsCriticoActual,
+                        EsCriticoPropuesto = c.EsCriticoPropuesto,
+                        Motivo = c.Motivo
+                    }).ToList(),
                 EstadoSolicitud = s.EstadoSolicitud,
                 ObservacionAdmin = s.ObservacionAdmin,
                 CreadoPorUsuarioId = s.CreadoPorUsuarioId,
