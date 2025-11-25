@@ -6,8 +6,8 @@ namespace TATA.GestiondeTalentoMoviles.CORE.Core.DTOs
     public class SkillRequeridoVacanteDto
     {
         public string Nombre { get; set; } = null!;
-        public string Tipo { get; set; } = null!;     
-        public int NivelDeseado { get; set; }         
+        public string Tipo { get; set; } = null!;
+        public int NivelDeseado { get; set; }
         public bool EsCritico { get; set; }
     }
 
@@ -27,10 +27,10 @@ namespace TATA.GestiondeTalentoMoviles.CORE.Core.DTOs
 
         public string Urgencia { get; set; } = "MEDIA";
 
-  
+
         public string EstadoVacante { get; set; } = "ABIERTA";
 
-   
+
         public string CreadaPorUsuarioId { get; set; } = null!;
     }
 
