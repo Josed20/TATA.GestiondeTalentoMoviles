@@ -21,12 +21,10 @@ namespace TATA.GestiondeTalentoMoviles.CORE.Infrastructure.Repositories
             await _vacantes.InsertOneAsync(vacante);
             return vacante;
         }
-
         public async Task<IEnumerable<Vacante>> GetAllAsync()
         {
             return await _vacantes.Find(_ => true).ToListAsync();
         }
-
         public async Task<Vacante?> GetByIdAsync(string id)
         {
             return await _vacantes.Find(v => v.Id == id).FirstOrDefaultAsync();
