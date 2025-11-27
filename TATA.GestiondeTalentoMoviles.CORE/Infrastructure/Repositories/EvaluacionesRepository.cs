@@ -12,7 +12,6 @@ namespace TATA.GestiondeTalentoMoviles.INFRASTRUCTURE.Repositories
 
         public EvaluacionesRepository(IMongoDatabase database)
         {
-            // Nombre real de tu colección en Mongo
             _collection = database.GetCollection<Evaluacion>("evaluaciones");
         }
 
@@ -33,6 +32,8 @@ namespace TATA.GestiondeTalentoMoviles.INFRASTRUCTURE.Repositories
 
         public async Task DeleteAsync(string id)
             => await _collection.DeleteOneAsync(x => x.Id == id);
+
+        public async Task AddManyAsync(IEnumerable<Evaluacion> evaluaciones)
+            => await _collection.InsertManyAsync(evaluaciones);
     }
 }
-
