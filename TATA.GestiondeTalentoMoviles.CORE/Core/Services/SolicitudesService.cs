@@ -52,9 +52,29 @@ namespace TATA.GestiondeTalentoMoviles.CORE.Services
             // Validación específica para solicitudes de actualización de skills
             if (dto.TipoSolicitudGeneral == "ACTUALIZACION_SKILLS")
             {
+                // Debe existir exactamente un cambio de skill
                 if (dto.CambiosSkillsPropuestos == null || dto.CambiosSkillsPropuestos.Count == 0)
                 {
-                    throw new ArgumentException("Para solicitudes de tipo ACTUALIZACION_SKILLS se requiere al menos un cambio de skill en 'cambiosSkillsPropuestos'");
+                    throw new ArgumentException("Para solicitudes de tipo ACTUALIZACION_SKILLS se requiere exactamente un cambio de skill en 'cambiosSkillsPropuestos'");
+                }
+
+                if (dto.CambiosSkillsPropuestos.Count > 1)
+                {
+                    throw new ArgumentException("En esta versión solo se permite una skill por solicitud de ACTUALIZACION_SKILLS");
+                }
+
+                // Certificación obligatoria para respaldar la actualización/creación de skill
+                if (dto.CertificacionPropuesta == null)
+                {
+                    throw new ArgumentException("Para solicitudes de tipo ACTUALIZACION_SKILLS la propiedad 'certificacionPropuesta' es obligatoria");
+                }
+
+                // Validar campos esenciales de la certificación
+                if (string.IsNullOrWhiteSpace(dto.CertificacionPropuesta.Nombre) ||
+                    string.IsNullOrWhiteSpace(dto.CertificacionPropuesta.Institucion) ||
+                    string.IsNullOrWhiteSpace(dto.CertificacionPropuesta.ArchivoPdfUrl))
+                {
+                    throw new ArgumentException("Los campos 'Nombre', 'Institucion' y 'ArchivoPdfUrl' de 'certificacionPropuesta' son obligatorios para ACTUALIZACION_SKILLS");
                 }
             }
 
@@ -132,14 +152,12 @@ namespace TATA.GestiondeTalentoMoviles.CORE.Services
             if (actualizada == null) return null;
 
             // TODO: Aplicar cambios automáticamente cuando se apruebe una solicitud
-            // Si actualizada.TipoSolicitudGeneral == "ACTUALIZACION_SKILLS" 
-            // && dto.EstadoSolicitud == "APROBADA"
-            // entonces aplicar los cambios en actualizada.CambiosSkillsPropuestos
-            // al Colaborador correspondiente:
-            //   - Actualizar niveles de skills existentes
-            //   - Modificar estado crítico de skills
-            //   - Agregar nuevos skills al colaborador
-            //   - Usar _colaboradorRepo para persistir los cambios
+            // Si actualizada.TipoSolicitudGeneral == "ACTUALIZACION_SKILLS" && dto.EstadoSolicitud == "APROBADA"
+            // entonces en una próxima iteración se debe implementar la lógica para:
+            //   - Actualizar o crear el skill del colaborador según actualizada.CambiosSkillsPropuestos (solo 1 elemento esperado)
+            //   - Ajustar niveles y flags críticos en el registro del colaborador
+            //   - Registrar o actualizar la certificación asociada al skill usando actualizada.CertificacionPropuesta
+            //   - Persistir esos cambios mediante _colaboradorRepo
 
             return MapEntityToReadDto(actualizada);
         }
@@ -179,8 +197,9 @@ namespace TATA.GestiondeTalentoMoviles.CORE.Services
                 FechaCreacion = DateTime.UtcNow
             };
 
-            // Si es solicitud de certificación
-            if (dto.TipoSolicitudGeneral == "CERTIFICACION" && dto.CertificacionPropuesta != null)
+            // Si es solicitud de certificación o actualización de skills, mapear la certificación propuesta
+            if ((dto.TipoSolicitudGeneral == "CERTIFICACION" || dto.TipoSolicitudGeneral == "ACTUALIZACION_SKILLS")
+                && dto.CertificacionPropuesta != null)
             {
                 solicitud.CertificacionPropuesta = new CertificacionPropuestaSolicitud
                 {

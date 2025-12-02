@@ -1,4 +1,5 @@
 ﻿using System;
+using System.Collections.Generic;
 using MongoDB.Bson;
 using MongoDB.Bson.Serialization.Attributes;
 
@@ -11,7 +12,7 @@ namespace TATA.GestiondeTalentoMoviles.CORE.Entities
         [BsonRepresentation(BsonType.ObjectId)]
         public string? Id { get; set; }
 
-        // "CERTIFICACION" / "ENTREVISTA_DESEMPENO"
+        // "CERTIFICACION" / "ENTREVISTA_DESEMPENO" / "ACTUALIZACION_SKILLS"
         [BsonElement("tipoSolicitudGeneral")]
         public string TipoSolicitudGeneral { get; set; } = null!;
 
@@ -34,6 +35,8 @@ namespace TATA.GestiondeTalentoMoviles.CORE.Entities
         public string? CertificacionIdAnterior { get; set; }
 
         // Datos de la nueva certificación propuesta
+        // Nota: CertificacionPropuesta se utiliza cuando TipoSolicitudGeneral == "CERTIFICACION"
+        // y también cuando TipoSolicitudGeneral == "ACTUALIZACION_SKILLS" (una sola certificación que respalda la solicitud de skill)
         [BsonElement("certificacionPropuesta")]
         public CertificacionPropuestaSolicitud? CertificacionPropuesta { get; set; }
 
@@ -147,7 +150,7 @@ namespace TATA.GestiondeTalentoMoviles.CORE.Entities
         public bool EsCriticoPropuesto { get; set; }
 
         [BsonElement("motivo")]
-        public string? Motivo { get; set; }           // “Subir de nivel por experiencia…”
+        public string? Motivo { get; set; }           // “Subir de nivel por experiencia…"
     }
 
 }
