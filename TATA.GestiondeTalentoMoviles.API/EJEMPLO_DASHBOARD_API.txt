@@ -1,0 +1,196 @@
+// ========================================
+// EJEMPLO DE USO DEL ENDPOINT DASHBOARD
+// ========================================
+
+// ==================
+// ENDPOINT PRINCIPAL
+// ==================
+GET /api/dashboard/metricas-admin
+Authorization: Bearer {token_admin}
+
+// ==================
+// RESPUESTA EXITOSA
+// ==================
+{
+  "success": true,
+  "message": "Métricas del dashboard obtenidas exitosamente",
+  "data": {
+    "metricasVacantes": {
+      "totalVacantes": 25,
+      "vacantesAbiertas": 10,
+      "vacantesCerradas": 12,
+      "vacantesEnProceso": 2,
+      "vacantesCanceladas": 1,
+      "tasaCobertura": 48.0,
+      "tiempoPromedioCoberturaDias": 15.5,
+      "vacantesPorUrgencia": {
+        "ALTA": 5,
+        "MEDIA": 15,
+        "BAJA": 5
+      },
+      "vacantesPorArea": {
+        "Desarrollo": 10,
+        "QA": 5,
+        "Infraestructura": 7,
+        "Seguridad": 3
+      }
+    },
+    "metricasMatching": {
+      "totalProcesosEjecutados": 50,
+      "promedioCandidatosPorVacante": 3.2,
+      "porcentajeMatchPromedio": 68.5,
+      "candidatosConMatchAlto": 25,
+      "candidatosConMatchMedio": 45,
+      "candidatosConMatchBajo": 30,
+      "vacantesSinCandidatos": 3
+    },
+    "skillsMasDemandados": [
+      {
+        "nombreSkill": "React Native",
+        "tipo": "TECNICO",
+        "cantidadVacantes": 8,
+        "cantidadCriticos": 5,
+        "nivelPromedioRequerido": 4.2
+      },
+      {
+        "nombreSkill": "Node.js",
+        "tipo": "TECNICO",
+        "cantidadVacantes": 7,
+        "cantidadCriticos": 4,
+        "nivelPromedioRequerido": 3.8
+      },
+      {
+        "nombreSkill": "MongoDB",
+        "tipo": "TECNICO",
+        "cantidadVacantes": 6,
+        "cantidadCriticos": 3,
+        "nivelPromedioRequerido": 3.5
+      }
+    ],
+    "brechasPrioritarias": [
+      {
+        "nombreSkill": "Kubernetes",
+        "nivelRequeridoPromedio": 4,
+        "nivelActualPromedio": 2.1,
+        "brechaPromedio": 1.9,
+        "colaboradoresAfectados": 15,
+        "vacantesAfectadas": 5
+      },
+      {
+        "nombreSkill": "Azure DevOps",
+        "nivelRequeridoPromedio": 4,
+        "nivelActualPromedio": 2.5,
+        "brechaPromedio": 1.5,
+        "colaboradoresAfectados": 20,
+        "vacantesAfectadas": 4
+      }
+    ],
+    "fechaGeneracion": "2024-01-15T10:30:00Z"
+  }
+}
+
+// ==================
+// GRÁFICOS SUGERIDOS PARA EL FRONTEND
+// ==================
+
+// 1. GRÁFICO DE DONA/PIE - Estado de Vacantes
+// Usar: metricasVacantes.vacantesAbiertas, vacantesCerradas, vacantesEnProceso, vacantesCanceladas
+
+// 2. GRÁFICO DE BARRAS HORIZONTALES - Vacantes por Área
+// Usar: metricasVacantes.vacantesPorArea
+
+// 3. GRÁFICO DE DONA - Urgencia de Vacantes
+// Usar: metricasVacantes.vacantesPorUrgencia
+// Colores: ALTA (rojo), MEDIA (amarillo), BAJA (verde)
+
+// 4. KPI CARD - Tasa de Cobertura
+// Usar: metricasVacantes.tasaCobertura
+// Mostrar como porcentaje con color según valor:
+//   < 30%: rojo
+//   30-60%: amarillo
+//   > 60%: verde
+
+// 5. KPI CARD - Tiempo Promedio de Cobertura
+// Usar: metricasVacantes.tiempoPromedioCoberturaDias
+// Mostrar en días
+
+// 6. GRÁFICO DE DONA - Distribución de Match
+// Usar: metricasMatching.candidatosConMatchAlto, candidatosConMatchMedio, candidatosConMatchBajo
+// Colores: Alto (verde), Medio (amarillo), Bajo (rojo)
+
+// 7. KPI CARD - Promedio de Candidatos por Vacante
+// Usar: metricasMatching.promedioCandidatosPorVacante
+
+// 8. KPI CARD - Porcentaje de Match Promedio
+// Usar: metricasMatching.porcentajeMatchPromedio
+
+// 9. GRÁFICO DE BARRAS HORIZONTALES - Top 10 Skills Demandados
+// Usar: skillsMasDemandados (array)
+// Eje X: cantidadVacantes
+// Eje Y: nombreSkill
+// Color diferente para skills críticos
+
+// 10. GRÁFICO DE BARRAS - Top 10 Brechas de Skills
+// Usar: brechasPrioritarias (array)
+// Eje X: nombreSkill
+// Eje Y: brechaPromedio
+// Tooltip: mostrar nivelRequeridoPromedio vs nivelActualPromedio
+
+// 11. ALERTA VISUAL - Vacantes Sin Candidatos
+// Usar: metricasMatching.vacantesSinCandidatos
+// Si > 0, mostrar alerta en color rojo
+
+// ==================
+// CONSUMO DESDE FLUTTER/REACT NATIVE
+// ==================
+
+// Flutter Example:
+/*
+Future<DashboardData> fetchDashboard() async {
+  final response = await http.get(
+    Uri.parse('$baseUrl/api/dashboard/metricas-admin'),
+    headers: {
+      'Authorization': 'Bearer $token',
+      'Content-Type': 'application/json',
+    },
+  );
+  
+  if (response.statusCode == 200) {
+    final json = jsonDecode(response.body);
+    return DashboardData.fromJson(json['data']);
+  } else {
+    throw Exception('Error al cargar dashboard');
+  }
+}
+*/
+
+// React Native Example:
+/*
+const fetchDashboard = async () => {
+  try {
+    const response = await fetch(`${API_URL}/api/dashboard/metricas-admin`, {
+      method: 'GET',
+      headers: {
+        'Authorization': `Bearer ${token}`,
+        'Content-Type': 'application/json',
+      },
+    });
+    
+    const json = await response.json();
+    if (json.success) {
+      return json.data;
+    }
+  } catch (error) {
+    console.error('Error:', error);
+  }
+};
+*/
+
+// ==================
+// NOTAS IMPORTANTES
+// ==================
+// 1. Solo usuarios con rol ADMIN pueden acceder a este endpoint
+// 2. El token JWT debe ser válido y no estar expirado
+// 3. Los datos se calculan en tiempo real desde MongoDB
+// 4. Si no hay datos, se retornan valores en 0 o listas vacías
+// 5. Todas las métricas están optimizadas para cargar rápidamente
