@@ -100,6 +100,9 @@ builder.Services.AddScoped<ISolicitudService, SolicitudService>();
 builder.Services.AddScoped<IAlertaRepository, AlertaRepository>();
 builder.Services.AddScoped<IAlertaService, AlertaService>();
 
+// Dashboard de Alertas Unificado (NUEVO)
+builder.Services.AddScoped<IAlertaDashboardService, AlertaDashboardService>();
+
 // Procesos Matching
 builder.Services.AddTransient<IProcesosMatchingService, ProcesosMatchingService>();
 builder.Services.AddTransient<IProcesosMatchingRepository, ProcesosMatchingRepository>();
