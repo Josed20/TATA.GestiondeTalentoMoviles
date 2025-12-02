@@ -8,9 +8,11 @@ using System.Text;
 using TATA.GestiondeTalentoMoviles.API.Middleware;
 using TATA.GestiondeTalentoMoviles.CORE.Core.Interfaces;
 using TATA.GestiondeTalentoMoviles.CORE.Core.Interfaces.Repositories;
+using TATA.GestiondeTalentoMoviles.CORE.Core.Options;
 using TATA.GestiondeTalentoMoviles.CORE.Core.Services;
 using TATA.GestiondeTalentoMoviles.CORE.Core.Settings;
 using TATA.GestiondeTalentoMoviles.CORE.Infrastructure.Repositories;
+using TATA.GestiondeTalentoMoviles.CORE.Infrastructure.Storage;
 using TATA.GestiondeTalentoMoviles.CORE.Services;
 using Microsoft.OpenApi.Models;
 using TATA.GestiondeTalentoMoviles.CORE.Interfaces;
@@ -45,6 +47,14 @@ builder.Services.AddScoped<IMongoDatabase>(s =>
     var client = s.GetRequiredService<IMongoClient>();
     return client.GetDatabase(settings.DatabaseName);
 });
+
+// --- CONFIGURACIÓN DE BACKBLAZE B2 ---
+builder.Services.Configure<BackblazeB2Options>(
+    builder.Configuration.GetSection("BackblazeB2")
+);
+
+// Registrar HttpClient para B2StorageService
+builder.Services.AddHttpClient<IB2StorageService, BackblazeB2StorageService>();
 
 // --- CONFIGURACIÓN DE JWT ---
 builder.Services.AddAuthentication(options =>
