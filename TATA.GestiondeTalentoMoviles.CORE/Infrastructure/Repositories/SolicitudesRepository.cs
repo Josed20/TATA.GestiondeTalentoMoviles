@@ -58,11 +58,13 @@ namespace TATA.GestiondeTalentoMoviles.CORE.Infrastructure.Repositories
         // ====================================
         // GET BY COLABORADOR - Todas las solicitudes de un colaborador
         // (útil para vista "Mis solicitudes" del colaborador)
+        // Ordenadas por fecha de creación descendente (la más reciente primero)
         // ====================================
         public async Task<IEnumerable<Solicitud>> GetByColaboradorAsync(string colaboradorId)
         {
             return await _solicitudes
                 .Find(s => s.ColaboradorId == colaboradorId)
+                .SortByDescending(s => s.FechaCreacion)
                 .ToListAsync();
         }
 
