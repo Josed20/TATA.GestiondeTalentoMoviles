@@ -8,7 +8,7 @@ namespace TATA.GestiondeTalentoMoviles.API.Controllers
 {
     [Route("api/alertas")]
     [ApiController]
-    [Authorize(Roles = AppRoles.ADMIN)]
+    [Authorize(Roles = $"{AppRoles.ADMIN},{AppRoles.COLABORADOR}")]
     public class AlertasController : ControllerBase
     {
         private readonly IAlertaService _service;
