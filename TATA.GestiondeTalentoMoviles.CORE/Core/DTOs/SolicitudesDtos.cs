@@ -66,6 +66,10 @@ namespace TATA.GestiondeTalentoMoviles.CORE.DTOs
         // Solo se usa cuando TipoSolicitudGeneral = "ENTREVISTA_DESEMPENO"
         public DatosEntrevistaPropuestaCreateDto? DatosEntrevistaPropuesta { get; set; }
 
+        // Solo cuando TipoSolicitudGeneral = "ACTUALIZACION_SKILLS"
+        public List<CambioSkillPropuestaCreateDto>? CambiosSkillsPropuestos { get; set; }
+
+
         // NUEVO: Opcional - Si no se envía, se puede tomar del JWT o usar uno por defecto
         public string? CreadoPorUsuarioId { get; set; }
     }
@@ -84,6 +88,9 @@ namespace TATA.GestiondeTalentoMoviles.CORE.DTOs
         public string? CertificacionIdAnterior { get; set; }
         public CertificacionPropuestaReadDto? CertificacionPropuesta { get; set; }
         public DatosEntrevistaPropuestaReadDto? DatosEntrevistaPropuesta { get; set; }
+
+        public List<CambioSkillPropuestaReadDto>? CambiosSkillsPropuestos { get; set; }
+
 
         // Workflow
         public string EstadoSolicitud { get; set; } = null!; // PENDIENTE / APROBADA / RECHAZADA / ...
@@ -111,4 +118,26 @@ namespace TATA.GestiondeTalentoMoviles.CORE.DTOs
         // NUEVO: Opcional - ID del usuario que revisa
         public string? RevisadoPorUsuarioId { get; set; }
     }
+    public class CambioSkillPropuestaCreateDto
+    {
+        public string Nombre { get; set; } = null!;
+        public string Tipo { get; set; } = null!;
+        public int? NivelActual { get; set; }
+        public int NivelPropuesto { get; set; }
+        public bool? EsCriticoActual { get; set; }
+        public bool EsCriticoPropuesto { get; set; }
+        public string? Motivo { get; set; }
+    }
+    public class CambioSkillPropuestaReadDto
+    {
+        public string Nombre { get; set; } = null!;
+        public string Tipo { get; set; } = null!;
+        public int? NivelActual { get; set; }
+        public int NivelPropuesto { get; set; }
+        public bool? EsCriticoActual { get; set; }
+        public bool EsCriticoPropuesto { get; set; }
+        public string? Motivo { get; set; }
+    }
+
+
 }

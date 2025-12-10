@@ -18,7 +18,7 @@ namespace TATA.GestiondeTalentoMoviles.API.Controllers
         }
 
         // --------------------------------------------
-        // GET: Obtener catálogo completo
+        // GET: Obtener catálogo completo sip
         // --------------------------------------------
         [HttpGet]
         public async Task<IActionResult> GetAll()
@@ -71,9 +71,25 @@ namespace TATA.GestiondeTalentoMoviles.API.Controllers
             if (mapping.ContainsKey(key))
                 return mapping[key](c);
 
-            // Secciones dinámicas
+            // Secciones dinámicas - parsear el string JSON a JsonElement
             if (c.AdditionalSections != null && c.AdditionalSections.ContainsKey(key))
-                return c.AdditionalSections[key];
+            {
+                var rawJson = c.AdditionalSections[key];
+                if (string.IsNullOrWhiteSpace(rawJson))
+                    return null;
+
+                try
+                {
+                    // Parsear el JSON string a JsonElement para que se serialice correctamente
+                    using var doc = JsonDocument.Parse(rawJson);
+                    return doc.RootElement.Clone();
+                }
+                catch
+                {
+                    // Si falla el parseo, devolver null
+                    return null;
+                }
+            }
 
             return null;
         }

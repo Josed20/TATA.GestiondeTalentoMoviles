@@ -17,8 +17,8 @@ namespace TATA.GestiondeTalentoMoviles.CORE.Core.DTOs
         public List<NivelSkillDto> NivelesSkill { get; set; } = new();
         public List<string> TiposSkill { get; set; } = new();
 
-        // para secciones adicionales
-        public Dictionary<string, object>? AdditionalSections { get; set; }
+        // para secciones adicionales - guardamos el JSON como string
+        public Dictionary<string, string>? AdditionalSections { get; set; }
     }
 
     public class CatalogoUpdateDto
@@ -28,8 +28,8 @@ namespace TATA.GestiondeTalentoMoviles.CORE.Core.DTOs
         public List<NivelSkillDto>? NivelesSkill { get; set; }
         public List<string>? TiposSkill { get; set; }
 
-        // permitir secciones dinámicas como objeto genérico (serializable)
-        public Dictionary<string, object>? AdditionalSections { get; set; }
+        // permitir secciones dinámicas como string JSON
+        public Dictionary<string, string>? AdditionalSections { get; set; }
     }
 
     public class CatalogoFilterDto

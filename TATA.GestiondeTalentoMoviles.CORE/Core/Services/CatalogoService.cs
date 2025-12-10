@@ -95,18 +95,48 @@ namespace TATA.GestiondeTalentoMoviles.CORE.Core.Services
             return Map(catalogo);
         }
 
-        // New overload that accepts JsonElement and routes to object-based UpdateAsync
+        // Overload that accepts JsonElement - for dynamic sections, save raw JSON directly
         public async Task<CatalogoReadDto> UpdateAsync(string seccion, JsonElement data)
         {
-            // Convert JsonElement to a .NET object for reuse
-            object obj;
+            // Obtener catalogo global
+            var catalogo = await _repo.GetFirstAsync();
+            if (catalogo == null)
+            {
+                // crear uno nuevo
+                catalogo = new Catalogo { Id = "catalogos_globales" };
+            }
 
-            // If it's an array or object, keep as raw JSON string to allow deserialization into specific typed lists
-            var raw = data.GetRawText();
-            // Use Newtonsoft to parse into object
-            obj = JsonConvert.DeserializeObject<object>(raw) ?? raw;
+            var key = seccion.ToLowerInvariant();
 
-            return await UpdateAsync(seccion, obj);
+            // Intentar resolver propiedad nativa mediante reflexión
+            var prop = FindNativeProperty(seccion);
+            if (prop != null && typeof(IEnumerable).IsAssignableFrom(prop.PropertyType))
+            {
+                // Sección nativa: deserializar al tipo correcto
+                var raw = data.GetRawText();
+                var deserialized = JsonConvert.DeserializeObject(raw, prop.PropertyType);
+                if (deserialized != null)
+                {
+                    prop.SetValue(catalogo, deserialized);
+                }
+                else
+                {
+                    // si la deserialización falla, aseguramos lista vacía compatible
+                    var empty = Activator.CreateInstance(prop.PropertyType);
+                    prop.SetValue(catalogo, empty);
+                }
+            }
+            else
+            {
+                // Sección dinámica: guardar el JSON raw directamente sin deserializar
+                var rawJson = data.GetRawText();
+                if (catalogo.AdditionalSections == null)
+                    catalogo.AdditionalSections = new();
+                catalogo.AdditionalSections[key] = rawJson;
+            }
+
+            await _repo.CreateOrReplaceAsync(catalogo);
+            return Map(catalogo);
         }
 
         public async Task<bool> DeleteIndexAsync(string seccion, int index)
@@ -228,7 +258,8 @@ namespace TATA.GestiondeTalentoMoviles.CORE.Core.Services
                 RolesLaborales = c.RolesLaborales,
                 NivelesSkill = c.NivelesSkill.Select(n => new NivelSkillDto { Codigo = n.Codigo, Descripcion = n.Descripcion }).ToList(),
                 TiposSkill = c.TiposSkill,
-                AdditionalSections = (c.AdditionalSections ?? new()).ToDictionary(k => k.Key, v => (object)JsonConvert.DeserializeObject<object>(v.Value)!)
+                // No deserializar AdditionalSections, solo asignar el diccionario tal cual
+                AdditionalSections = c.AdditionalSections ?? new()
             };
         }
     }
